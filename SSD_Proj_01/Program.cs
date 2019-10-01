@@ -28,9 +28,8 @@ namespace SSD_Proj_01
         {
             string login;
 
-            Console.WriteLine("Welcome to this application");
-            Console.WriteLine("Would you like to sign in or browser as a guest (Y/N) : ");
-            login = Console.ReadLine();
+            login = WelcomeDisplayUI();
+
 
             if (login.ToUpper() == "Y")
             {
@@ -60,7 +59,7 @@ namespace SSD_Proj_01
             Console.Write("Enter user name : ");
             username = Console.ReadLine();
             Console.Write("Password : ");
-            password = Orb.App.Console1.ReadPassword();
+            password = Console1.ReadPassword();
 
             Console.WriteLine("Sorry - I just can't keep a secret!");
             Console.WriteLine("Your password was:\n<Password>{0}</Password>", password);
@@ -76,6 +75,17 @@ namespace SSD_Proj_01
                 Console.WriteLine("**************************************************");
                 Console.WriteLine(student.Name +"/t"+student.ID +"/t"+student.Course);
             }
+        }
+        private static string WelcomeDisplayUI()
+        {
+            string login;
+
+            Console.WriteLine("***************************************************************");
+            Console.WriteLine("*******************Welcome to this application*****************");
+            Console.Write("Would you like to sign in or browser as a guest (Y/N) : ");
+            login = Console.ReadLine();
+
+            return login;
         }
     }
 
