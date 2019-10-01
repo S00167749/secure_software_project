@@ -1,0 +1,4002 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Terminal.Gui</name>
+    </assembly>
+    <members>
+        <member name="T:Terminal.Gui.Responder">
+            <summary>
+            Responder base class implemented by objects that want to participate on keyboard and mouse input.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.Responder.CanFocus">
+            <summary>
+            Gets or sets a value indicating whether this <see cref="T:Terminal.Gui.Responder"/> can focus.
+            </summary>
+            <value><c>true</c> if can focus; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Terminal.Gui.Responder.HasFocus">
+            <summary>
+            Gets or sets a value indicating whether this <see cref="T:Terminal.Gui.Responder"/> has focus.
+            </summary>
+            <value><c>true</c> if has focus; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="M:Terminal.Gui.Responder.ProcessHotKey(Terminal.Gui.KeyEvent)">
+            <summary>
+              This method can be overwritten by view that
+                want to provide accelerator functionality
+                (Alt-key for example).
+            </summary>
+            <remarks>
+              <para>
+                Before keys are sent to the subview on the
+                current view, all the views are
+                processed and the key is passed to the widgets
+                to allow some of them to process the keystroke
+                as a hot-key. </para>
+             <para>
+                For example, if you implement a button that
+                has a hotkey ok "o", you would catch the
+                combination Alt-o here.  If the event is
+                caught, you must return true to stop the
+                keystroke from being dispatched to other
+                views.
+             </para>
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Responder.ProcessKey(Terminal.Gui.KeyEvent)">
+            <summary>
+              If the view is focused, gives the view a
+              chance to process the keystroke. 
+            </summary>
+            <remarks>
+              <para>
+                Views can override this method if they are
+                interested in processing the given keystroke.
+                If they consume the keystroke, they must
+                return true to stop the keystroke from being
+                processed by other widgets or consumed by the
+                widget engine.    If they return false, the
+                keystroke will be passed using the ProcessColdKey
+                method to other views to process.
+              </para>
+              <para>
+                The View implementation does nothing but return false,
+                so it is not necessary to call base.ProcessKey if you 
+                derive directly from View, but you should if you derive
+                other View subclasses.
+              </para>
+            </remarks>
+            <param name="keyEvent">Contains the details about the key that produced the event.</param>
+        </member>
+        <member name="M:Terminal.Gui.Responder.ProcessColdKey(Terminal.Gui.KeyEvent)">
+            <summary>
+              This method can be overwritten by views that
+                want to provide accelerator functionality
+                (Alt-key for example), but without
+                interefering with normal ProcessKey behavior.
+            </summary>
+            <remarks>
+              <para>
+                After keys are sent to the subviews on the
+                current view, all the view are
+                processed and the key is passed to the views
+                to allow some of them to process the keystroke
+                as a cold-key. </para>
+             <para>
+               This functionality is used, for example, by
+               default buttons to act on the enter key.
+               Processing this as a hot-key would prevent
+               non-default buttons from consuming the enter
+               keypress when they have the focus.
+             </para>
+            </remarks>
+            <param name="keyEvent">Contains the details about the key that produced the event.</param>
+        </member>
+        <member name="M:Terminal.Gui.Responder.MouseEvent(Terminal.Gui.MouseEvent)">
+            <summary>
+            Method invoked when a mouse event is generated
+            </summary>
+            <returns><c>true</c>, if the event was handled, <c>false</c> otherwise.</returns>
+            <param name="mouseEvent">Contains the details about the mouse event.</param>
+        </member>
+        <member name="T:Terminal.Gui.LayoutStyle">
+            <summary>
+            Determines the LayoutStyle for a view, if Absolute, during LayoutSubviews, the
+            value from the Frame will be used, if the value is Computer, then the Frame 
+            will be updated from the X, Y Pos objets and the Width and Heigh Dim objects.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.LayoutStyle.Absolute">
+            <summary>
+            The position and size of the view are based on the Frame value.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.LayoutStyle.Computed">
+            <summary>
+            The position and size of the view will be computed based on the
+            X, Y, Width and Height properties and set on the Frame.
+            </summary>
+        </member>
+        <member name="T:Terminal.Gui.View">
+            <summary>
+            View is the base class for all views on the screen and represents a visible element that can render itself and contains zero or more nested views.
+            </summary>
+            <remarks>
+            <para>
+               The View defines the base functionality for user interface elements in Terminal/gui.cs.  Views
+               can contain one or more subviews, can respond to user input and render themselves on the screen.
+            </para>
+            <para>
+               Views can either be created with an absolute position, by calling the constructor that takes a
+               Rect parameter to specify the absolute position and size (the Frame of the View) or by setting the
+               X, Y, Width and Height properties on the view.    Both approaches use coordinates that are relative 
+               to the container they are being added to.
+            </para>
+            <para>
+               When you do not specify a Rect frame you can use the more flexible 
+               Dim and Pos objects that can dynamically update the position of a view.   
+               The X and Y properties are of type <see cref="T:Terminal.Gui.Pos"/>
+               and you can use either absolute positions, percentages or anchor
+               points.   The Width and Height properties are of type 
+               <see cref="T:Terminal.Gui.Dim"/> and can use absolute position, 
+               percentages and anchors.  These are useful as they will take
+               care of repositioning your views if your view's frames are resized
+               or if the terminal size changes.
+            </para>
+            <para>
+               When you specify the Rect parameter to a view, you are setting the LayoutStyle to Absolute, and the 
+               view will always stay in the position that you placed it.   To change the position change the 
+               Frame property to the new position.
+            </para>
+            <para>
+               Subviews can be added to a View by calling the Add method.   The container of a view is the 
+               Superview.
+            </para>
+            <para>
+               Developers can call the SetNeedsDisplay method on the view to flag a region or the entire view
+               as requiring to be redrawn.
+            </para>
+            <para>
+               Views have a ColorScheme property that defines the default colors that subviews
+               should use for rendering.   This ensures that the views fit in the context where
+               they are being used, and allows for themes to be plugged in.   For example, the
+               default colors for windows and toplevels uses a blue background, while it uses 
+               a white background for dialog boxes and a red background for errors.
+            </para>
+            <para>
+               If a ColorScheme is not set on a view, the result of the ColorScheme is the
+               value of the SuperView and the value might only be valid once a view has been
+               added to a SuperView, so your subclasses should not rely on ColorScheme being
+               set at construction time.
+            </para>
+            <para>
+               Using ColorSchemes has the advantage that your application will work both
+               in color as well as black and white displays.
+            </para>
+            <para>
+               Views that are focusable should implement the PositionCursor to make sure that
+               the cursor is placed in a location that makes sense.   Unix terminals do not have
+               a way of hiding the cursor, so it can be distracting to have the cursor left at 
+               the last focused view.   So views should make sure that they place the cursor
+               in a visually sensible place.
+            </para>
+            <para>
+               The metnod LayoutSubviews is invoked when the size or layout of a view has
+               changed.   The default processing system will keep the size and dimensions
+               for views that use the LayoutKind.Absolute, and will recompute the
+               frames for the vies that use LayoutKind.Computed.
+            </para>
+            </remarks>
+        </member>
+        <member name="F:Terminal.Gui.View.Driver">
+            <summary>
+            Points to the current driver in use by the view, it is a convenience property
+            for simplifying the development of new views.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.View.Subviews">
+            <summary>
+            This returns a list of the subviews contained by this view.
+            </summary>
+            <value>The subviews.</value>
+        </member>
+        <member name="P:Terminal.Gui.View.Id">
+            <summary>
+            Gets or sets an identifier for the view;
+            </summary>
+            <value>The identifier.</value>
+        </member>
+        <member name="P:Terminal.Gui.View.WantMousePositionReports">
+            <summary>
+            Gets or sets a value indicating whether this <see cref="T:Terminal.Gui.View"/> want mouse position reports.
+            </summary>
+            <value><c>true</c> if want mouse position reports; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Terminal.Gui.View.Frame">
+            <summary>
+            Gets or sets the frame for the view.
+            </summary>
+            <value>The frame.</value>
+            <remarks>
+               Altering the Frame of a view will trigger the redrawing of the 
+               view as well as the redrawing of the affected regions in the superview.
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.View.GetEnumerator">
+            <summary>
+            Gets an enumerator that enumerates the subviews in this view.
+            </summary>
+            <returns>The enumerator.</returns>
+        </member>
+        <member name="P:Terminal.Gui.View.LayoutStyle">
+            <summary>
+            Controls how the view's Frame is computed during the LayoutSubviews method, if Absolute, then
+            LayoutSubviews does not change the Frame properties, otherwise the Frame is updated from the
+            values in X, Y, Width and Height properties.
+            </summary>
+            <value>The layout style.</value>
+        </member>
+        <member name="P:Terminal.Gui.View.Bounds">
+            <summary>
+            The bounds represent the View-relative rectangle used for this view.   Updates to the Bounds update the Frame, and has the same side effects as updating the frame.
+            </summary>
+            <value>The bounds.</value>
+        </member>
+        <member name="P:Terminal.Gui.View.X">
+            <summary>
+            Gets or sets the X position for the view (the column).  This is only used when the LayoutStyle is Computed, if the
+            LayoutStyle is set to Absolute, this value is ignored.
+            </summary>
+            <value>The X Position.</value>
+        </member>
+        <member name="P:Terminal.Gui.View.Y">
+            <summary>
+            Gets or sets the Y position for the view (line).  This is only used when the LayoutStyle is Computed, if the
+            LayoutStyle is set to Absolute, this value is ignored.
+            </summary>
+            <value>The y position (line).</value>
+        </member>
+        <member name="P:Terminal.Gui.View.Width">
+            <summary>
+            Gets or sets the width for the view. This is only used when the LayoutStyle is Computed, if the
+            LayoutStyle is set to Absolute, this value is ignored.
+            </summary>
+            <value>The width.</value>
+        </member>
+        <member name="P:Terminal.Gui.View.Height">
+            <summary>
+            Gets or sets the height for the view. This is only used when the LayoutStyle is Computed, if the
+            LayoutStyle is set to Absolute, this value is ignored.
+            </summary>
+            <value>The height.</value>
+        </member>
+        <member name="P:Terminal.Gui.View.SuperView">
+            <summary>
+            Returns the container for this view, or null if this view has not been added to a container.
+            </summary>
+            <value>The super view.</value>
+        </member>
+        <member name="M:Terminal.Gui.View.#ctor(Terminal.Gui.Rect)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.View"/> class with the absolute
+            dimensions specified in the frame.   If you want to have Views that can be positioned with
+            Pos and Dim properties on X, Y, Width and Height, use the empty constructor.
+            </summary>
+            <param name="frame">The region covered by this view.</param>
+        </member>
+        <member name="M:Terminal.Gui.View.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.View"/> class and sets the
+            view up for Computed layout, which will use the values in X, Y, Width and Height to 
+            compute the View's Frame.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.View.SetNeedsDisplay">
+            <summary>
+            Invoke to flag that this view needs to be redisplayed, by any code
+            that alters the state of the view.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.View.SetNeedsDisplay(Terminal.Gui.Rect)">
+            <summary>
+            Flags the specified rectangle region on this view as needing to be repainted.
+            </summary>
+            <param name="region">The region that must be flagged for repaint.</param>
+        </member>
+        <member name="M:Terminal.Gui.View.ChildNeedsDisplay">
+            <summary>
+            Flags this view for requiring the children views to be repainted.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.View.Add(Terminal.Gui.View)">
+            <summary>
+              Adds a subview to this view.
+            </summary>
+            <remarks>
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.View.Add(Terminal.Gui.View[])">
+            <summary>
+            Adds the specified views to the view.
+            </summary>
+            <param name="views">Array of one or more views (can be optional parameter).</param>
+        </member>
+        <member name="M:Terminal.Gui.View.RemoveAll">
+            <summary>
+              Removes all the widgets from this container.
+            </summary>
+            <remarks>
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.View.Remove(Terminal.Gui.View)">
+            <summary>
+              Removes a widget from this container.
+            </summary>
+            <remarks>
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.View.Clear">
+            <summary>
+              Clears the view region with the current color.
+            </summary>
+            <remarks>
+              <para>
+                This clears the entire region used by this view.
+              </para>
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.View.Clear(Terminal.Gui.Rect)">
+            <summary>
+              Clears the specfied rectangular region with the current color
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.View.ViewToScreen(System.Int32,System.Int32,System.Int32@,System.Int32@,System.Boolean)">
+            <summary>
+            Converts the (col,row) position from the view into a screen (col,row).  The values are clamped to (0..ScreenDim-1)
+            </summary>
+            <param name="col">View-based column.</param>
+            <param name="row">View-based row.</param>
+            <param name="rcol">Absolute column, display relative.</param>
+            <param name="rrow">Absolute row, display relative.</param>
+            <param name="clipped">Whether to clip the result of the ViewToScreen method, if set to true, the rcol, rrow values are clamped to the screen dimensions.</param>
+        </member>
+        <member name="M:Terminal.Gui.View.ScreenToView(System.Int32,System.Int32)">
+            <summary>
+            Converts a point from screen coordinates into the view coordinate space.
+            </summary>
+            <returns>The mapped point.</returns>
+            <param name="x">X screen-coordinate point.</param>
+            <param name="y">Y screen-coordinate point.</param>
+        </member>
+        <member name="M:Terminal.Gui.View.ClipToBounds">
+            <summary>
+            Sets the Console driver's clip region to the current View's Bounds.
+            </summary>
+            <returns>The existing driver's Clip region, which can be then set by setting the Driver.Clip property.</returns>
+        </member>
+        <member name="M:Terminal.Gui.View.SetClip(Terminal.Gui.Rect)">
+            <summary>
+            Sets the clipping region to the specified region, the region is view-relative
+            </summary>
+            <returns>The previous clip region.</returns>
+            <param name="rect">Rectangle region to clip into, the region is view-relative.</param>
+        </member>
+        <member name="M:Terminal.Gui.View.DrawFrame(Terminal.Gui.Rect,System.Int32,System.Boolean)">
+            <summary>
+            Draws a frame in the current view, clipped by the boundary of this view
+            </summary>
+            <param name="rect">Rectangular region for the frame to be drawn.</param>
+            <param name="padding">The padding to add to the drawn frame.</param>
+            <param name="fill">If set to <c>true</c> it fill will the contents.</param>
+        </member>
+        <member name="M:Terminal.Gui.View.DrawHotString(NStack.ustring,Terminal.Gui.Attribute,Terminal.Gui.Attribute)">
+            <summary>
+            Utility function to draw strings that contain a hotkey
+            </summary>
+            <param name="text">String to display, the underscoore before a letter flags the next letter as the hotkey.</param>
+            <param name="hotColor">Hot color.</param>
+            <param name="normalColor">Normal color.</param>
+        </member>
+        <member name="M:Terminal.Gui.View.DrawHotString(NStack.ustring,System.Boolean,Terminal.Gui.ColorScheme)">
+            <summary>
+            Utility function to draw strings that contains a hotkey using a colorscheme and the "focused" state.
+            </summary>
+            <param name="text">String to display, the underscoore before a letter flags the next letter as the hotkey.</param>
+            <param name="focused">If set to <c>true</c> this uses the focused colors from the color scheme, otherwise the regular ones.</param>
+            <param name="scheme">The color scheme to use.</param>
+        </member>
+        <member name="M:Terminal.Gui.View.Move(System.Int32,System.Int32)">
+            <summary>
+            This moves the cursor to the specified column and row in the view.
+            </summary>
+            <returns>The move.</returns>
+            <param name="col">Col.</param>
+            <param name="row">Row.</param>
+        </member>
+        <member name="M:Terminal.Gui.View.PositionCursor">
+            <summary>
+              Positions the cursor in the right position based on the currently focused view in the chain.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.View.HasFocus">
+            <summary>
+            Gets or sets a value indicating whether this <see cref="T:Terminal.Gui.View"/> has focus.
+            </summary>
+            <value><c>true</c> if has focus; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Terminal.Gui.View.Focused">
+            <summary>
+            Returns the currently focused view inside this view, or null if nothing is focused.
+            </summary>
+            <value>The focused.</value>
+        </member>
+        <member name="P:Terminal.Gui.View.MostFocused">
+            <summary>
+            Returns the most focused view in the chain of subviews (the leaf view that has the focus).
+            </summary>
+            <value>The most focused.</value>
+        </member>
+        <member name="P:Terminal.Gui.View.ColorScheme">
+            <summary>
+            The color scheme for this view, if it is not defined, it returns the parent's
+            color scheme.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.View.AddRune(System.Int32,System.Int32,System.Rune)">
+            <summary>
+            Displays the specified character in the specified column and row.
+            </summary>
+            <param name="col">Col.</param>
+            <param name="row">Row.</param>
+            <param name="ch">Ch.</param>
+        </member>
+        <member name="M:Terminal.Gui.View.ClearNeedsDisplay">
+            <summary>
+            Removes the SetNeedsDisplay and the ChildNeedsDisplay setting on this view.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.View.Redraw(Terminal.Gui.Rect)">
+            <summary>
+            Performs a redraw of this view and its subviews, only redraws the views that have been flagged for a re-display.
+            </summary>
+            <param name="region">The region to redraw, this is relative to the view itself.</param>
+            <remarks>
+            <para>
+               Views should set the color that they want to use on entry, as otherwise this will inherit
+               the last color that was set globaly on the driver.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.View.SetFocus(Terminal.Gui.View)">
+            <summary>
+            Focuses the specified sub-view.
+            </summary>
+            <param name="view">View.</param>
+        </member>
+        <member name="M:Terminal.Gui.View.ProcessKey(Terminal.Gui.KeyEvent)">
+            <param name="keyEvent">Contains the details about the key that produced the event.</param>
+        </member>
+        <member name="M:Terminal.Gui.View.ProcessHotKey(Terminal.Gui.KeyEvent)">
+            <param name="keyEvent">Contains the details about the key that produced the event.</param>
+        </member>
+        <member name="M:Terminal.Gui.View.ProcessColdKey(Terminal.Gui.KeyEvent)">
+            <param name="keyEvent">Contains the details about the key that produced the event.</param>
+        </member>
+        <member name="M:Terminal.Gui.View.EnsureFocus">
+            <summary>
+            Finds the first view in the hierarchy that wants to get the focus if nothing is currently focused, otherwise, it does nothing.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.View.FocusFirst">
+            <summary>
+            Focuses the first focusable subview if one exists.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.View.FocusLast">
+            <summary>
+            Focuses the last focusable subview if one exists.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.View.FocusPrev">
+            <summary>
+            Focuses the previous view.
+            </summary>
+            <returns><c>true</c>, if previous was focused, <c>false</c> otherwise.</returns>
+        </member>
+        <member name="M:Terminal.Gui.View.FocusNext">
+            <summary>
+            Focuses the next view.
+            </summary>
+            <returns><c>true</c>, if next was focused, <c>false</c> otherwise.</returns>
+        </member>
+        <member name="M:Terminal.Gui.View.RelativeLayout(Terminal.Gui.Rect)">
+            <summary>
+            Computes the RelativeLayout for the view, given the frame for its container.
+            </summary>
+            <param name="hostFrame">The Frame for the host.</param>
+        </member>
+        <member name="M:Terminal.Gui.View.LayoutSubviews">
+            <summary>
+            This virtual method is invoked when a view starts executing or 
+            when the dimensions of the view have changed, for example in 
+            response to the container view or terminal resizing.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.View.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents the current <see cref="T:Terminal.Gui.View"/>.
+            </summary>
+            <returns>A <see cref="T:System.String"/> that represents the current <see cref="T:Terminal.Gui.View"/>.</returns>
+        </member>
+        <member name="T:Terminal.Gui.Toplevel">
+            <summary>
+            Toplevel views can be modally executed.
+            </summary>
+            <remarks>
+              <para>
+                Toplevels can be modally executing views, and they return control
+                to the caller when the "Running" property is set to false, or
+                by calling <see cref="M:Terminal.Gui.Application.RequestStop()"/>
+              </para>
+              <para>
+                There will be a toplevel created for you on the first time use
+                and can be accessed from the property <see cref="P:Terminal.Gui.Application.Top"/>,
+                but new toplevels can be created and ran on top of it.   To run, create the
+                toplevel and then invoke <see cref="M:Terminal.Gui.Application.Run"/> with the
+                new toplevel.
+              </para>
+            </remarks>
+        </member>
+        <member name="F:Terminal.Gui.Toplevel.Running">
+            <summary>
+            This flag is checked on each iteration of the mainloop and it continues
+            running until this flag is set to false.   
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.Toplevel.#ctor(Terminal.Gui.Rect)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.Toplevel"/> class with the specified absolute layout.
+            </summary>
+            <param name="frame">Frame.</param>
+        </member>
+        <member name="M:Terminal.Gui.Toplevel.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.Toplevel"/> class with Computed layout, defaulting to <see langword="async"/> full screen.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.Toplevel.Create">
+            <summary>
+            Convenience factory method that creates a new toplevel with the current terminal dimensions.
+            </summary>
+            <returns>The create.</returns>
+        </member>
+        <member name="M:Terminal.Gui.Toplevel.WillPresent">
+            <summary>
+            This method is invoked by Application.Begin as part of the Application.Run after
+            the views have been laid out, and before the views are drawn for the first time.
+            </summary>
+        </member>
+        <member name="T:Terminal.Gui.Window">
+            <summary>
+            A toplevel view that draws a frame around its region and has a "ContentView" subview where the contents are added.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.Window.Title">
+            <summary>
+            The title to be displayed for this window.
+            </summary>
+            <value>The title.</value>
+        </member>
+        <member name="M:Terminal.Gui.Window.#ctor(Terminal.Gui.Rect,NStack.ustring)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.Gui.Window"/> class with an optional title and a set frame.
+            </summary>
+            <param name="frame">Frame.</param>
+            <param name="title">Title.</param>
+        </member>
+        <member name="M:Terminal.Gui.Window.#ctor(NStack.ustring)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.Window"/> class with an optional title.
+            </summary>
+            <param name="title">Title.</param>
+        </member>
+        <member name="M:Terminal.Gui.Window.#ctor(Terminal.Gui.Rect,NStack.ustring,System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.Window"/> with
+            the specified frame for its location, with the specified border 
+            an optional title.
+            </summary>
+            <param name="frame">Frame.</param>
+            <param name="padding">Number of characters to use for padding of the drawn frame.</param>
+            <param name="title">Title.</param>
+        </member>
+        <member name="M:Terminal.Gui.Window.#ctor(NStack.ustring,System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.Window"/> with
+            the specified frame for its location, with the specified border 
+            an optional title.
+            </summary>
+            <param name="padding">Number of characters to use for padding of the drawn frame.</param>
+            <param name="title">Title.</param>
+        </member>
+        <member name="M:Terminal.Gui.Window.GetEnumerator">
+            <summary>
+            Enumerates the various views in the ContentView.
+            </summary>
+            <returns>The enumerator.</returns>
+        </member>
+        <member name="M:Terminal.Gui.Window.Add(Terminal.Gui.View)">
+            <summary>
+            Add the specified view to the ContentView.
+            </summary>
+            <param name="view">View to add to the window.</param>
+        </member>
+        <member name="M:Terminal.Gui.Window.Remove(Terminal.Gui.View)">
+            <summary>
+              Removes a widget from this container.
+            </summary>
+            <remarks>
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Window.RemoveAll">
+            <summary>
+              Removes all widgets from this container.
+            </summary>
+            <remarks>
+            </remarks>
+        </member>
+        <member name="T:Terminal.Gui.Application">
+            <summary>
+            The application driver for gui.cs
+            </summary>
+            <remarks>
+              <para>
+                You can hook up to the Iteration event to have your method 
+                invoked on each iteration of the mainloop.
+              </para>
+              <para>
+                Creates a mainloop to process input events, handle timers and
+                other sources of data.   It is accessible via the MainLoop property.
+              </para>
+              <para>
+                When invoked sets the SynchronizationContext to one that is tied
+                to the mainloop, allowing user code to use async/await.
+              </para>
+            </remarks>
+        </member>
+        <member name="F:Terminal.Gui.Application.Driver">
+            <summary>
+            The current Console Driver in use.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.Application.Top">
+            <summary>
+            The Toplevel object used for the application on startup.
+            </summary>
+            <value>The top.</value>
+        </member>
+        <member name="P:Terminal.Gui.Application.Current">
+            <summary>
+            The current toplevel object.   This is updated when Application.Run enters and leaves and points to the current toplevel.
+            </summary>
+            <value>The current.</value>
+        </member>
+        <member name="P:Terminal.Gui.Application.MainLoop">
+            <summary>
+            The mainloop driver for the applicaiton
+            </summary>
+            <value>The main loop.</value>
+        </member>
+        <member name="E:Terminal.Gui.Application.Iteration">
+            <summary>
+              This event is raised on each iteration of the
+              main loop. 
+            </summary>
+            <remarks>
+              See also <see cref="T:System.Threading.Timeout"/>
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Application.MakeCenteredRect(Terminal.Gui.Size)">
+            <summary>
+            Returns a rectangle that is centered in the screen for the provided size.
+            </summary>
+            <returns>The centered rect.</returns>
+            <param name="size">Size for the rectangle.</param>
+        </member>
+        <member name="F:Terminal.Gui.Application.UseSystemConsole">
+            <summary>
+            If set, it forces the use of the System.Console-based driver.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.Application.Init">
+            <summary>
+            Initializes the Application
+            </summary>
+        </member>
+        <member name="T:Terminal.Gui.Application.RunState">
+            <summary>
+            Captures the execution state for the provided TopLevel view.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.Application.RunState.Dispose">
+            <summary>
+            Releases alTop = l resource used by the <see cref="T:Terminal.Gui.Application.RunState"/> object.
+            </summary>
+            <remarks>Call <see cref="M:Terminal.Gui.Application.RunState.Dispose"/> when you are finished using the <see cref="T:Terminal.Gui.Application.RunState"/>. The
+            <see cref="M:Terminal.Gui.Application.RunState.Dispose"/> method leaves the <see cref="T:Terminal.Gui.Application.RunState"/> in an unusable state. After
+            calling <see cref="M:Terminal.Gui.Application.RunState.Dispose"/>, you must release all references to the
+            <see cref="T:Terminal.Gui.Application.RunState"/> so the garbage collector can reclaim the memory that the
+            <see cref="T:Terminal.Gui.Application.RunState"/> was occupying.</remarks>
+        </member>
+        <member name="M:Terminal.Gui.Application.RunState.Dispose(System.Boolean)">
+            <summary>
+            Dispose the specified disposing.
+            </summary>
+            <returns>The dispose.</returns>
+            <param name="disposing">If set to <c>true</c> disposing.</param>
+        </member>
+        <member name="M:Terminal.Gui.Application.GrabMouse(Terminal.Gui.View)">
+            <summary>
+            Grabs the mouse, forcing all mouse events to be routed to the specified view until UngrabMouse is called.
+            </summary>
+            <returns>The grab.</returns>
+            <param name="view">View that will receive all mouse events until UngrabMouse is invoked.</param>
+        </member>
+        <member name="M:Terminal.Gui.Application.UngrabMouse">
+            <summary>
+            Releases the mouse grab, so mouse events will be routed to the view on which the mouse is.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Application.RootMouseEvent">
+            <summary>
+            Merely a debugging aid to see the raw mouse events
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.Application.Begin(Terminal.Gui.Toplevel)">
+            <summary>
+            Building block API: Prepares the provided toplevel for execution.
+            </summary>
+            <returns>The runstate handle that needs to be passed to the End() method upon completion.</returns>
+            <param name="toplevel">Toplevel to prepare execution for.</param>
+            <remarks>
+             This method prepares the provided toplevel for running with the focus,
+             it adds this to the list of toplevels, sets up the mainloop to process the 
+             event, lays out the subviews, focuses the first element, and draws the
+             toplevel in the screen.   This is usually followed by executing
+             the <see cref="M:Terminal.Gui.Application.RunLoop(Terminal.Gui.Application.RunState,System.Boolean)"/> method, and then the <see cref="M:Terminal.Gui.Application.End(Terminal.Gui.Application.RunState)"/> method upon termination which will
+              undo these changes.
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Application.End(Terminal.Gui.Application.RunState)">
+            <summary>
+            Building block API: completes the exection of a Toplevel that was started with Begin.
+            </summary>
+            <param name="runState">The runstate returned by the <see cref="M:Terminal.Gui.Application.Begin(Terminal.Gui.Toplevel)"/> method.</param>
+        </member>
+        <member name="M:Terminal.Gui.Application.Refresh">
+            <summary>
+            Triggers a refresh of the entire display.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.Application.RunLoop(Terminal.Gui.Application.RunState,System.Boolean)">
+            <summary>
+              Building block API: Runs the main loop for the created dialog
+            </summary>
+            <remarks>
+              Use the wait parameter to control whether this is a
+              blocking or non-blocking call.   
+            </remarks>
+            <param name="state">The state returned by the Begin method.</param>
+            <param name="wait">By default this is true which will execute the runloop waiting for events, if you pass false, you can use this method to run a single iteration of the events.</param>
+        </member>
+        <member name="M:Terminal.Gui.Application.Run">
+            <summary>
+            Runs the application with the built-in toplevel view
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.Application.Run(Terminal.Gui.Toplevel)">
+            <summary>
+              Runs the main loop on the given container.
+            </summary>
+            <remarks>
+              <para>
+                This method is used to start processing events
+                for the main application, but it is also used to
+                run modal dialog boxes.
+              </para>
+              <para>
+                To make a toplevel stop execution, set the "Running"
+                property to false.
+              </para>
+              <para>
+                This is equivalent to calling Begin on the toplevel view, followed by RunLoop with the
+                returned value, and then calling end on the return value.
+              </para>
+              <para>
+                Alternatively, if your program needs to control the main loop and needs to 
+                process events manually, you can invoke Begin to set things up manually and then
+                repeatedly call RunLoop with the wait parameter set to false.   By doing this
+                the RunLoop method will only process any pending events, timers, idle handlers and
+                then return control immediately.
+              </para>
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Application.RequestStop">
+            <summary>
+            Stops running the most recent toplevel
+            </summary>
+        </member>
+        <member name="T:Terminal.Gui.Dialog">
+            <summary>
+            The dialog box is a window that by default is centered and contains one 
+            or more buttons.  It defaults to the Colors.Dialog color scheme and has a
+             1 cell padding around the edges.
+            </summary>
+            <remarks>
+             To run the dialog modally, create the Dialog, and pass this to Application.Run which
+            will execute the dialog until it terminates via the [ESC] key, or when one of the views
+            or buttons added to the dialog set the Running property on the Dialog to false.
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Dialog.#ctor(NStack.ustring,System.Int32,System.Int32,Terminal.Gui.Button[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.Dialog"/> class with an optional set of buttons to display
+            </summary>
+            <param name="title">Title for the dialog.</param>
+            <param name="width">Width for the dialog.</param>
+            <param name="height">Height for the dialog.</param>
+            <param name="buttons">Optional buttons to lay out at the bottom of the dialog.</param>
+        </member>
+        <member name="M:Terminal.Gui.Dialog.AddButton(Terminal.Gui.Button)">
+            <summary>
+            Adds a button to the dialog, its layout will be controled by the dialog
+            </summary>
+            <param name="button">Button to add.</param>
+        </member>
+        <member name="T:Terminal.Gui.FileDialog">
+            <summary>
+            Base class for the OpenDialog and the SaveDialog
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.FileDialog.Prompt">
+            <summary>
+            Gets or sets the prompt label for the button displayed to the user
+            </summary>
+            <value>The prompt.</value>
+        </member>
+        <member name="P:Terminal.Gui.FileDialog.NameFieldLabel">
+            <summary>
+            Gets or sets the name field label.
+            </summary>
+            <value>The name field label.</value>
+        </member>
+        <member name="P:Terminal.Gui.FileDialog.Message">
+            <summary>
+            Gets or sets the message displayed to the user, defaults to nothing
+            </summary>
+            <value>The message.</value>
+        </member>
+        <member name="P:Terminal.Gui.FileDialog.CanCreateDirectories">
+            <summary>
+            Gets or sets a value indicating whether this <see cref="T:Terminal.Gui.FileDialog"/> can create directories.
+            </summary>
+            <value><c>true</c> if can create directories; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Terminal.Gui.FileDialog.IsExtensionHidden">
+            <summary>
+            Gets or sets a value indicating whether this <see cref="T:Terminal.Gui.FileDialog"/> is extension hidden.
+            </summary>
+            <value><c>true</c> if is extension hidden; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Terminal.Gui.FileDialog.DirectoryPath">
+            <summary>
+            Gets or sets the directory path for this panel
+            </summary>
+            <value>The directory path.</value>
+        </member>
+        <member name="P:Terminal.Gui.FileDialog.AllowedFileTypes">
+            <summary>
+            The array of filename extensions allowed, or null if all file extensions are allowed.
+            </summary>
+            <value>The allowed file types.</value>
+        </member>
+        <member name="P:Terminal.Gui.FileDialog.AllowsOtherFileTypes">
+            <summary>
+            Gets or sets a value indicating whether this <see cref="T:Terminal.Gui.FileDialog"/> allows the file to be saved with a different extension
+            </summary>
+            <value><c>true</c> if allows other file types; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Terminal.Gui.FileDialog.FilePath">
+            <summary>
+            The File path that is currently shown on the panel
+            </summary>
+            <value>The absolute file path for the file path entered.</value>
+        </member>
+        <member name="T:Terminal.Gui.SaveDialog">
+            <summary>
+             The save dialog provides an interactive dialog box for users to pick a file to 
+             save.
+            </summary>
+            <remarks>
+            <para>
+              To use it, create an instance of the SaveDialog, and then
+              call Application.Run on the resulting instance.   This will run the dialog modally,
+              and when this returns, the FileName property will contain the selected value or 
+              null if the user canceled. 
+            </para>
+            </remarks>
+        </member>
+        <member name="P:Terminal.Gui.SaveDialog.FileName">
+            <summary>
+            Gets the name of the file the user selected for saving, or null
+            if the user canceled the dialog box.
+            </summary>
+            <value>The name of the file.</value>
+        </member>
+        <member name="T:Terminal.Gui.OpenDialog">
+            <summary>
+            The Open Dialog provides an interactive dialog box for users to select files or directories.
+            </summary>
+            <remarks>
+            <para>
+              The open dialog can be used to select files for opening, it can be configured to allow
+              multiple items to be selected (based on the AllowsMultipleSelection) variable and
+              you can control whether this should allow files or directories to be selected.
+            </para>
+            <para>
+              To use it, create an instance of the OpenDialog, configure its properties, and then
+              call Application.Run on the resulting instance.   This will run the dialog modally,
+              and when this returns, the list of filds will be available on the FilePaths property.
+            </para>
+            <para>
+            To select more than one file, users can use the spacebar, or control-t.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:Terminal.Gui.OpenDialog.CanChooseFiles">
+            <summary>
+            Gets or sets a value indicating whether this <see cref="T:Terminal.Gui.OpenDialog"/> can choose files.
+            </summary>
+            <value><c>true</c> if can choose files; otherwise, <c>false</c>.  Defaults to <c>true</c></value>
+        </member>
+        <member name="P:Terminal.Gui.OpenDialog.CanChooseDirectories">
+            <summary>
+            Gets or sets a value indicating whether this <see cref="T:Terminal.Gui.OpenDialog"/> can choose directories.
+            </summary>
+            <value><c>true</c> if can choose directories; otherwise, <c>false</c> defaults to <c>false</c>.</value>
+        </member>
+        <member name="P:Terminal.Gui.OpenDialog.AllowsMultipleSelection">
+            <summary>
+            Gets or sets a value indicating whether this <see cref="T:Terminal.Gui.OpenDialog"/> allows multiple selection.
+            </summary>
+            <value><c>true</c> if allows multiple selection; otherwise, <c>false</c>, defaults to false.</value>
+        </member>
+        <member name="P:Terminal.Gui.OpenDialog.FilePaths">
+            <summary>
+            Returns the selected files, or an empty list if nothing has been selected
+            </summary>
+            <value>The file paths.</value>
+        </member>
+        <member name="T:Terminal.Gui.MessageBox">
+            <summary>
+            Message box displays a modal message to the user, with a title, a message and a series of options that the user can choose from.
+            </summary>
+            <para>
+              The difference between the Query and ErrorQuery method is the default set of colors used for the message box.
+            </para>
+            <para>
+            The following example pops up a Message Box with 50 columns, and 7 lines, with the specified title and text, plus two buttons.
+            The value -1 is returned when the user cancels the dialog by pressing the ESC key.
+            </para>
+            <example>
+            <code lang="c#">
+            var n = MessageBox.Query (50, 7, "Quit Demo", "Are you sure you want to quit this demo?", "Yes", "No");
+            if (n == 0)
+               quit = true;
+            else
+               quit = false;
+            
+            </code>
+            </example>
+        </member>
+        <member name="M:Terminal.Gui.MessageBox.Query(System.Int32,System.Int32,System.String,System.String,System.String[])">
+            <summary>
+            Presents a message with the specified title and message and a list of buttons to show to the user.
+            </summary>
+            <returns>The index of the selected button, or -1 if the user pressed ESC to close the dialog.</returns>
+            <param name="width">Width for the window.</param>
+            <param name="height">Height for the window.</param>
+            <param name="title">Title for the query.</param>
+            <param name="message">Message to display, might contain multiple lines..</param>
+            <param name="buttons">Array of buttons to add.</param>
+        </member>
+        <member name="M:Terminal.Gui.MessageBox.ErrorQuery(System.Int32,System.Int32,System.String,System.String,System.String[])">
+            <summary>
+            Presents an error message box with the specified title and message and a list of buttons to show to the user.
+            </summary>
+            <returns>The index of the selected button, or -1 if the user pressed ESC to close the dialog.</returns>
+            <param name="width">Width for the window.</param>
+            <param name="height">Height for the window.</param>
+            <param name="title">Title for the query.</param>
+            <param name="message">Message to display, might contain multiple lines..</param>
+            <param name="buttons">Array of buttons to add.</param>
+        </member>
+        <member name="T:Terminal.Gui.Color">
+            <summary>
+            Basic colors that can be used to set the foreground and background colors in console applications.  These can only be
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Color.Black">
+            <summary>
+            The black color.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Color.Blue">
+            <summary>
+            The blue color.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Color.Green">
+            <summary>
+            The green color.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Color.Cyan">
+            <summary>
+            The cyan color.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Color.Red">
+            <summary>
+            The red color.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Color.Magenta">
+            <summary>
+            The magenta color.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Color.Brown">
+            <summary>
+            The brown color.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Color.Gray">
+            <summary>
+            The gray color.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Color.DarkGray">
+            <summary>
+            The dark gray color.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Color.BrightBlue">
+            <summary>
+            The bright bBlue color.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Color.BrightGreen">
+            <summary>
+            The bright green color.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Color.BrighCyan">
+            <summary>
+            The brigh cyan color.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Color.BrightRed">
+            <summary>
+            The bright red color.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Color.BrightMagenta">
+            <summary>
+            The bright magenta color.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Color.BrightYellow">
+            <summary>
+            The bright yellow color.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Color.White">
+            <summary>
+            The White color.
+            </summary>
+        </member>
+        <member name="T:Terminal.Gui.Attribute">
+            <summary>
+            Attributes are used as elements that contain both a foreground and a background or platform specific features
+            </summary>
+            <remarks>
+              Attributes are needed to map colors to terminal capabilities that might lack colors, on color
+              scenarios, they encode both the foreground and the background color and are used in the ColorScheme
+              class to define color schemes that can be used in your application.
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Attribute.#ctor(System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.Attribute"/> struct.
+            </summary>
+            <param name="value">Value.</param>
+        </member>
+        <member name="M:Terminal.Gui.Attribute.op_Implicit(Terminal.Gui.Attribute)~System.Int32">
+            <summary>
+            Implicit conversion from an attribute to the underlying Int32 representation
+            </summary>
+            <returns>The integer value stored in the attribute.</returns>
+            <param name="c">The attribute to convert</param>
+        </member>
+        <member name="M:Terminal.Gui.Attribute.op_Implicit(System.Int32)~Terminal.Gui.Attribute">
+            <summary>
+            Implicitly convert an integer value into an attribute
+            </summary>
+            <returns>An attribute with the specified integer value.</returns>
+            <param name="v">value</param>
+        </member>
+        <member name="M:Terminal.Gui.Attribute.Make(Terminal.Gui.Color,Terminal.Gui.Color)">
+            <summary>
+            Creates an attribute from the specified foreground and background.
+            </summary>
+            <returns>The make.</returns>
+            <param name="foreground">Foreground color to use.</param>
+            <param name="background">Background color to use.</param>
+        </member>
+        <member name="T:Terminal.Gui.ColorScheme">
+            <summary>
+            Color scheme definitions, they cover some common scenarios and are used
+            typically in toplevel containers to set the scheme that is used by all the
+            views contained inside.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.ColorScheme.Normal">
+            <summary>
+            The default color for text, when the view is not focused.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.ColorScheme.Focus">
+            <summary>
+            The color for text when the view has the focus.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.ColorScheme.HotNormal">
+            <summary>
+            The color for the hotkey when a view is not focused
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.ColorScheme.HotFocus">
+            <summary>
+            The color for the hotkey when the view is focused.
+            </summary>
+        </member>
+        <member name="T:Terminal.Gui.Colors">
+            <summary>
+            The default ColorSchemes for the application.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Colors.Base">
+            <summary>
+            The base color scheme, for the default toplevel views.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Colors.Dialog">
+            <summary>
+            The dialog color scheme, for standard popup dialog boxes
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Colors.Menu">
+            <summary>
+            The menu bar color
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Colors.Error">
+            <summary>
+            The color scheme for showing errors.
+            </summary>
+        </member>
+        <member name="T:Terminal.Gui.SpecialChar">
+            <summary>
+            Special characters that can be drawn with Driver.AddSpecial.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.SpecialChar.HLine">
+            <summary>
+            Horizontal line character.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.SpecialChar.VLine">
+            <summary>
+            Vertical line character.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.SpecialChar.Stipple">
+            <summary>
+            Stipple pattern
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.SpecialChar.Diamond">
+            <summary>
+            Diamond character
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.SpecialChar.ULCorner">
+            <summary>
+            Upper left corner
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.SpecialChar.LLCorner">
+            <summary>
+            Lower left corner
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.SpecialChar.URCorner">
+            <summary>
+            Upper right corner
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.SpecialChar.LRCorner">
+            <summary>
+            Lower right corner
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.SpecialChar.LeftTee">
+            <summary>
+            Left tee
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.SpecialChar.RightTee">
+            <summary>
+            Right tee
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.SpecialChar.TopTee">
+            <summary>
+            Top tee 
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.SpecialChar.BottomTee">
+            <summary>
+            The bottom tee.
+            </summary>
+        </member>
+        <member name="T:Terminal.Gui.ConsoleDriver">
+            <summary>
+            ConsoleDriver is an abstract class that defines the requirements for a console driver.   One implementation if the CursesDriver, and another one uses the .NET Console one.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.ConsoleDriver.Cols">
+            <summary>
+            The current number of columns in the terminal.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.ConsoleDriver.Rows">
+            <summary>
+            The current number of rows in the terminal.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.ConsoleDriver.Init(System.Action)">
+            <summary>
+            Initializes the driver
+            </summary>
+            <param name="terminalResized">Method to invoke when the terminal is resized.</param>
+        </member>
+        <member name="M:Terminal.Gui.ConsoleDriver.Move(System.Int32,System.Int32)">
+            <summary>
+            Moves the cursor to the specified column and row.
+            </summary>
+            <param name="col">Column to move the cursor to.</param>
+            <param name="row">Row to move the cursor to.</param>
+        </member>
+        <member name="M:Terminal.Gui.ConsoleDriver.AddRune(System.Rune)">
+            <summary>
+            Adds the specified rune to the display at the current cursor position
+            </summary>
+            <param name="rune">Rune to add.</param>
+        </member>
+        <member name="M:Terminal.Gui.ConsoleDriver.AddStr(NStack.ustring)">
+            <summary>
+            Adds the specified 
+            </summary>
+            <param name="str">String.</param>
+        </member>
+        <member name="M:Terminal.Gui.ConsoleDriver.Refresh">
+            <summary>
+            Updates the screen to reflect all the changes that have been done to the display buffer
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.ConsoleDriver.UpdateCursor">
+            <summary>
+            Updates the location of the cursor position
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.ConsoleDriver.End">
+            <summary>
+            Ends the execution of the console driver.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.ConsoleDriver.UpdateScreen">
+            <summary>
+            Redraws the physical screen with the contents that have been queued up via any of the printing commands.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.ConsoleDriver.SetAttribute(Terminal.Gui.Attribute)">
+            <summary>
+            Selects the specified attribute as the attribute to use for future calls to AddRune, AddString.
+            </summary>
+            <param name="c">C.</param>
+        </member>
+        <member name="M:Terminal.Gui.ConsoleDriver.SetColors(System.Int16,System.Int16)">
+            <summary>
+            Advanced uses - set colors to any pre-set pairs, you would need to init_color 
+            that independently with the R, G, B values.
+            </summary>
+            <param name="foregroundColorId">Foreground color identifier.</param>
+            <param name="backgroundColorId">Background color identifier.</param>
+        </member>
+        <member name="M:Terminal.Gui.ConsoleDriver.DrawFrame(Terminal.Gui.Rect,System.Int32,System.Boolean)">
+            <summary>
+            Draws a frame on the specified region with the specified padding around the frame.
+            </summary>
+            <param name="region">Region where the frame will be drawn..</param>
+            <param name="padding">Padding to add on the sides.</param>
+            <param name="fill">If set to <c>true</c> it will clear the contents with the current color, otherwise the contents will be left untouched.</param>
+        </member>
+        <member name="M:Terminal.Gui.ConsoleDriver.Suspend">
+            <summary>
+            Suspend the application, typically needs to save the state, suspend the app and upon return, reset the console driver.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.ConsoleDriver.Clip">
+            <summary>
+            Controls the current clipping region that AddRune/AddStr is subject to.
+            </summary>
+            <value>The clip.</value>
+        </member>
+        <member name="M:Terminal.Gui.ConsoleDriver.UncookMouse">
+            <summary>
+            Disables the cooked event processing from the mouse driver.  At startup, it is assumed mouse events are cooked.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.ConsoleDriver.CookMouse">
+            <summary>
+            Enables the cooked event processing from the mouse driver
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.ConsoleDriver.HLine">
+            <summary>
+            Horizontal line character.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.ConsoleDriver.VLine">
+            <summary>
+            Vertical line character.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.ConsoleDriver.Stipple">
+            <summary>
+            Stipple pattern
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.ConsoleDriver.Diamond">
+            <summary>
+            Diamond character
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.ConsoleDriver.ULCorner">
+            <summary>
+            Upper left corner
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.ConsoleDriver.LLCorner">
+            <summary>
+            Lower left corner
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.ConsoleDriver.URCorner">
+            <summary>
+            Upper right corner
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.ConsoleDriver.LRCorner">
+            <summary>
+            Lower right corner
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.ConsoleDriver.LeftTee">
+            <summary>
+            Left tee
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.ConsoleDriver.RightTee">
+            <summary>
+            Right tee
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.ConsoleDriver.TopTee">
+            <summary>
+            Top tee 
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.ConsoleDriver.BottomTee">
+            <summary>
+            The bottom tee.
+            </summary>
+        </member>
+        <member name="T:Terminal.Gui.CursesDriver">
+            <summary>
+            This is the Curses driver for the gui.cs/Terminal framework.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.CursesDriver.MakeColor(System.Int16,System.Int16)">
+            <summary>
+            Creates a curses color from the provided foreground and background colors
+            </summary>
+            <param name="foreground">Contains the curses attributes for the foreground (color, plus any attributes)</param>
+            <param name="background">Contains the curses attributes for the background (color, plus any attributes)</param>
+            <returns></returns>
+        </member>
+        <member name="M:Terminal.Gui.Platform.Suspend">
+            <summary>
+            Suspends the process by sending SIGTSTP to itself
+            </summary>
+            <returns>The suspend.</returns>
+        </member>
+        <member name="T:Terminal.Gui.Key">
+            <summary>
+            The Key enumeration contains special encoding for some keys, but can also
+            encode all the unicode values that can be passed.   
+            </summary>
+            <remarks>
+            <para>
+              If the SpecialMask is set, then the value is that of the special mask,
+              otherwise, the value is the one of the lower bits (as extracted by CharMask)
+            </para>
+            <para>
+              Control keys are the values between 1 and 26 corresponding to Control-A to Control-Z
+            </para>
+            <para>
+              Unicode runes are also stored here, the letter 'A" for example is encoded as a value 65 (not surfaced in the enum).
+            </para>
+            </remarks>
+        </member>
+        <member name="F:Terminal.Gui.Key.CharMask">
+            <summary>
+            Mask that indictes that this is a character value, values outside this range
+            indicate special characters like Alt-key combinations or special keys on the
+            keyboard like function keys, arrows keys and so on.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.SpecialMask">
+            <summary>
+            If the SpecialMask is set, then the value is that of the special mask,
+            otherwise, the value is the one of the lower bits (as extracted by CharMask).
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlSpace">
+            <summary>
+            The key code for the user pressing Control-spacebar
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlA">
+            <summary>
+            The key code for the user pressing Control-A
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlB">
+            <summary>
+            The key code for the user pressing Control-B
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlC">
+            <summary>
+            The key code for the user pressing Control-C
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlD">
+            <summary>
+            The key code for the user pressing Control-D
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlE">
+            <summary>
+            The key code for the user pressing Control-E
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlF">
+            <summary>
+            The key code for the user pressing Control-F
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlG">
+            <summary>
+            The key code for the user pressing Control-G
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlH">
+            <summary>
+            The key code for the user pressing Control-H
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlI">
+            <summary>
+            The key code for the user pressing Control-I (same as the tab key).
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.Tab">
+            <summary>
+            The key code for the user pressing the tab key (same as pressing Control-I).
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlJ">
+            <summary>
+            The key code for the user pressing Control-J
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlK">
+            <summary>
+            The key code for the user pressing Control-K
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlL">
+            <summary>
+            The key code for the user pressing Control-L
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlM">
+            <summary>
+            The key code for the user pressing Control-M
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlN">
+            <summary>
+            The key code for the user pressing Control-N (same as the return key).
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlO">
+            <summary>
+            The key code for the user pressing Control-O
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlP">
+            <summary>
+            The key code for the user pressing Control-P
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlQ">
+            <summary>
+            The key code for the user pressing Control-Q
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlR">
+            <summary>
+            The key code for the user pressing Control-R
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlS">
+            <summary>
+            The key code for the user pressing Control-S
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlT">
+            <summary>
+            The key code for the user pressing Control-T
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlU">
+            <summary>
+            The key code for the user pressing Control-U
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlV">
+            <summary>
+            The key code for the user pressing Control-V
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlW">
+            <summary>
+            The key code for the user pressing Control-W
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlX">
+            <summary>
+            The key code for the user pressing Control-X
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlY">
+            <summary>
+            The key code for the user pressing Control-Y
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.ControlZ">
+            <summary>
+            The key code for the user pressing Control-Z
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.Esc">
+            <summary>
+            The key code for the user pressing the escape key
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.Enter">
+            <summary>
+            The key code for the user pressing the return key.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.Space">
+            <summary>
+            The key code for the user pressing the space bar
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.Delete">
+            <summary>
+            The key code for the user pressing the delete key.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.AltMask">
+            <summary>
+              When this value is set, the Key encodes the sequence Alt-KeyValue.
+              And the actual value must be extracted by removing the AltMask.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.Backspace">
+            <summary>
+            Backspace key.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.CursorUp">
+            <summary>
+            Cursor up key
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.CursorDown">
+            <summary>
+            Cursor down key.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.CursorLeft">
+            <summary>
+            Cursor left key.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.CursorRight">
+            <summary>
+            Cursor right key.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.PageUp">
+            <summary>
+            Page Up key.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.PageDown">
+            <summary>
+            Page Down key.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.Home">
+            <summary>
+            Home key
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.End">
+            <summary>
+            End key
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.DeleteChar">
+            <summary>
+            Delete character key
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.InsertChar">
+            <summary>
+            Insert character key
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.F1">
+            <summary>
+            F1 key.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.F2">
+            <summary>
+            F2 key.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.F3">
+            <summary>
+            F3 key.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.F4">
+            <summary>
+            F4 key.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.F5">
+            <summary>
+            F5 key.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.F6">
+            <summary>
+            F6 key.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.F7">
+            <summary>
+            F7 key.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.F8">
+            <summary>
+            F8 key.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.F9">
+            <summary>
+            F9 key.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.F10">
+            <summary>
+            F10 key.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.BackTab">
+            <summary>
+            Shift-tab key (backwards tab key).
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Key.Unknown">
+            <summary>
+            A key with an unknown mapping was raised.
+            </summary>
+        </member>
+        <member name="T:Terminal.Gui.KeyEvent">
+            <summary>
+            Describes a keyboard event.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.KeyEvent.Key">
+            <summary>
+            Symb olid definition for the key.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.KeyEvent.KeyValue">
+            <summary>
+              The key value cast to an integer, you will typicall use this for
+              extracting the Unicode rune value out of a key, when none of the
+              symbolic options are in use.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.KeyEvent.IsAlt">
+            <summary>
+            Gets a value indicating whether the Alt key was pressed (real or synthesized)
+            </summary>
+            <value><c>true</c> if is alternate; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Terminal.Gui.KeyEvent.IsCtrl">
+            <summary>
+            Determines whether the value is a control key
+            </summary>
+            <value><c>true</c> if is ctrl; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="M:Terminal.Gui.KeyEvent.#ctor(Terminal.Gui.Key)">
+            <summary>
+              Constructs a new KeyEvent from the provided Key value - can be a rune cast into a Key value
+            </summary>
+        </member>
+        <member name="T:Terminal.Gui.MouseFlags">
+            <summary>
+            Mouse flags reported in MouseEvent.
+            </summary>
+            <remarks>
+            They just happen to map to the ncurses ones.
+            </remarks>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button1Pressed">
+            <summary>
+            The first mouse button was pressed.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button1Released">
+            <summary>
+            The first mouse button was released.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button1Clicked">
+            <summary>
+            The first mouse button was clicked (press+release).
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button1DoubleClicked">
+            <summary>
+            The first mouse button was double-clicked.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button1TripleClicked">
+            <summary>
+            The first mouse button was tripple-clicked.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button2Pressed">
+            <summary>
+            The second mouse button was pressed.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button2Released">
+            <summary>
+            The second mouse button was released.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button2Clicked">
+            <summary>
+            The second mouse button was clicked (press+release).
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button2DoubleClicked">
+            <summary>
+            The second mouse button was double-clicked.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button2TrippleClicked">
+            <summary>
+            The second mouse button was tripple-clicked.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button3Pressed">
+            <summary>
+            The third mouse button was pressed.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button3Released">
+            <summary>
+            The third mouse button was released.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button3Clicked">
+            <summary>
+            The third mouse button was clicked (press+release).
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button3DoubleClicked">
+            <summary>
+            The third mouse button was double-clicked.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button3TripleClicked">
+            <summary>
+            The third mouse button was tripple-clicked.  
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button4Pressed">
+            <summary>
+            The fourth mouse button was pressed.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button4Released">
+            <summary>
+            The fourth mouse button was released.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button4Clicked">
+            <summary>
+            The fourth button was clicked (press+release).
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button4DoubleClicked">
+            <summary>
+            The fourth button was double-clicked.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.Button4TripleClicked">
+            <summary>
+            The fourth button was tripple-clicked.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.ButtonShift">
+            <summary>
+            The fourth button was pressed.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.ButtonCtrl">
+            <summary>
+            Flag: the shift key was pressed when the mouse button took place.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.ButtonAlt">
+            <summary>
+            Flag: the alt key was pressed when the mouse button took place.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.ReportMousePosition">
+            <summary>
+            The mouse position is being reported in this event.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseFlags.AllEvents">
+            <summary>
+            Mask that captures all the events.
+            </summary>
+        </member>
+        <member name="T:Terminal.Gui.MouseEvent">
+            <summary>
+            Describes a mouse event
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseEvent.X">
+            <summary>
+            The X (column) location for the mouse event.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseEvent.Y">
+            <summary>
+            The Y (column) location for the mouse event.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MouseEvent.Flags">
+            <summary>
+            Flags indicating the kind of mouse event that is being posted.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.MouseEvent.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents the current <see cref="T:Terminal.Gui.MouseEvent"/>.
+            </summary>
+            <returns>A <see cref="T:System.String"/> that represents the current <see cref="T:Terminal.Gui.MouseEvent"/>.</returns>
+        </member>
+        <member name="T:Terminal.Gui.Point">
+            <summary>
+            Represents an ordered pair of integer x- and y-coordinates that defines a point in a two-dimensional plane.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Point.X">
+            <summary>
+            Gets or sets the x-coordinate of this Point.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Point.Y">
+            <summary>
+            Gets or sets the y-coordinate of this Point.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Point.Empty">
+             <summary>
+            	Empty Shared Field
+             </summary>
+            
+             <remarks>
+            	An uninitialized Point Structure.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Point.op_Addition(Terminal.Gui.Point,Terminal.Gui.Size)">
+             <summary>
+            	Addition Operator
+             </summary>
+            
+             <remarks>
+            	Translates a Point using the Width and Height
+            	properties of the given <typeref>Size</typeref>.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Point.op_Equality(Terminal.Gui.Point,Terminal.Gui.Point)">
+             <summary>
+            	Equality Operator
+             </summary>
+            
+             <remarks>
+            	Compares two Point objects. The return value is
+            	based on the equivalence of the X and Y properties 
+            	of the two points.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Point.op_Inequality(Terminal.Gui.Point,Terminal.Gui.Point)">
+             <summary>
+            	Inequality Operator
+             </summary>
+            
+             <remarks>
+            	Compares two Point objects. The return value is
+            	based on the equivalence of the X and Y properties 
+            	of the two points.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Point.op_Subtraction(Terminal.Gui.Point,Terminal.Gui.Size)">
+             <summary>
+            	Subtraction Operator
+             </summary>
+            
+             <remarks>
+            	Translates a Point using the negation of the Width 
+            	and Height properties of the given Size.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Point.op_Explicit(Terminal.Gui.Point)~Terminal.Gui.Size">
+             <summary>
+            	Point to Size Conversion
+             </summary>
+            
+             <remarks>
+            	Returns a Size based on the Coordinates of a given 
+            	Point. Requires explicit cast.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Point.#ctor(Terminal.Gui.Size)">
+             <summary>
+            	Point Constructor
+             </summary>
+            
+             <remarks>
+            	Creates a Point from a Size value.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Point.#ctor(System.Int32,System.Int32)">
+             <summary>
+            	Point Constructor
+             </summary>
+            
+             <remarks>
+            	Creates a Point from a specified x,y coordinate pair.
+             </remarks>
+        </member>
+        <member name="P:Terminal.Gui.Point.IsEmpty">
+             <summary>
+            	IsEmpty Property
+             </summary>
+            
+             <remarks>
+            	Indicates if both X and Y are zero.
+             </remarks>		
+        </member>
+        <member name="M:Terminal.Gui.Point.Equals(System.Object)">
+             <summary>
+            	Equals Method
+             </summary>
+            
+             <remarks>
+            	Checks equivalence of this Point and another object.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Point.GetHashCode">
+             <summary>
+            	GetHashCode Method
+             </summary>
+            
+             <remarks>
+            	Calculates a hashing value.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Point.Offset(System.Int32,System.Int32)">
+             <summary>
+            	Offset Method
+             </summary>
+            
+             <remarks>
+            	Moves the Point a specified distance.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Point.ToString">
+             <summary>
+            	ToString Method
+             </summary>
+            
+             <remarks>
+            	Formats the Point as a string in coordinate notation.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Point.Add(Terminal.Gui.Point,Terminal.Gui.Size)">
+            <summary>
+            Adds the specified Size to the specified Point.
+            </summary>
+            <returns>The Point that is the result of the addition operation.</returns>
+            <param name="pt">The Point to add.</param>
+            <param name="sz">The Size to add.</param>
+        </member>
+        <member name="M:Terminal.Gui.Point.Offset(Terminal.Gui.Point)">
+            <summary>
+            Translates this Point by the specified Point.
+            </summary>
+            <returns>The offset.</returns>
+            <param name="p">The Point used offset this Point.</param>
+        </member>
+        <member name="M:Terminal.Gui.Point.Subtract(Terminal.Gui.Point,Terminal.Gui.Size)">
+            <summary>
+            Returns the result of subtracting specified Size from the specified Point.
+            </summary>
+            <returns>The Point that is the result of the subtraction operation.</returns>
+            <param name="pt">The Point to be subtracted from.</param>
+            <param name="sz">The Size to subtract from the Point.</param>
+        </member>
+        <member name="T:Terminal.Gui.Pos">
+            <summary>
+            Describes a position which can be an absolute value, a percentage, centered, or 
+            relative to the ending dimension.   Integer values are implicitly convertible to
+            an absolute Pos.    These objects are created using the static methods Percent,
+            AnchorEnd and Center.   The Pos objects can be combined with the addition and 
+            subtraction operators.
+            </summary>
+            <remarks>
+              <para>
+                Use the Pos objects on the X or Y properties of a view to control the position.
+              </para>
+              <para>
+                These can be used to set the absolute position, when merely assigning an
+                integer value (via the implicit integer to Pos conversion), and they can be combined
+                to produce more useful layouts, like: Pos.Center - 3, which would shift the postion
+                of the view 3 characters to the left after centering for example.
+              </para>
+              <para>
+                It is possible to reference coordinates of another view by using the methods
+                Left(View), Right(View), Bottom(View), Top(View).   The X(View) and Y(View) are
+                aliases to Left(View) and Top(View) respectively.
+              </para>
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Pos.Percent(System.Single)">
+            <summary>
+            Creates a percentage Pos object
+            </summary>
+            <returns>The percent Pos object.</returns>
+            <param name="n">A value between 0 and 100 representing the percentage.</param>
+        </member>
+        <member name="M:Terminal.Gui.Pos.AnchorEnd(System.Int32)">
+            <summary>
+            Creates a Pos object that is anchored to the end of the dimension, useful to flush 
+            the layout from the end.
+            </summary>
+            <returns>The Pos object anchored to the end (the bottom or the right side).</returns>
+            <param name="margin">Optional margin to set aside.</param>
+        </member>
+        <member name="M:Terminal.Gui.Pos.Center">
+            <summary>
+            Returns a Pos object that can be used to center the views.
+            </summary>
+            <returns>The center Pos.</returns>
+        </member>
+        <member name="M:Terminal.Gui.Pos.op_Implicit(System.Int32)~Terminal.Gui.Pos">
+            <summary>
+            Creates an Absolute Pos from the specified integer value.
+            </summary>
+            <returns>The Absolute Pos.</returns>
+            <param name="n">The value to convert to the pos.</param>
+        </member>
+        <member name="M:Terminal.Gui.Pos.At(System.Int32)">
+            <summary>
+            Creates an Absolute Pos from the specified integer value.
+            </summary>
+            <returns>The Absolute Pos.</returns>
+            <param name="n">The value to convert to the pos.</param>
+        </member>
+        <member name="M:Terminal.Gui.Pos.op_Addition(Terminal.Gui.Pos,Terminal.Gui.Pos)">
+            <summary>
+            Adds a <see cref="T:Terminal.Gui.Pos"/> to a <see cref="T:Terminal.Gui.Pos"/>, yielding a new <see cref="T:Terminal.Gui.Pos"/>.
+            </summary>
+            <param name="left">The first <see cref="T:Terminal.Gui.Pos"/> to add.</param>
+            <param name="right">The second <see cref="T:Terminal.Gui.Pos"/> to add.</param>
+            <returns>The <see cref="T:Terminal.Gui.Pos"/> that is the sum of the values of <c>left</c> and <c>right</c>.</returns>
+        </member>
+        <member name="M:Terminal.Gui.Pos.op_Subtraction(Terminal.Gui.Pos,Terminal.Gui.Pos)">
+            <summary>
+            Subtracts a <see cref="T:Terminal.Gui.Pos"/> from a <see cref="T:Terminal.Gui.Pos"/>, yielding a new <see cref="T:Terminal.Gui.Pos"/>.
+            </summary>
+            <param name="left">The <see cref="T:Terminal.Gui.Pos"/> to subtract from (the minuend).</param>
+            <param name="right">The <see cref="T:Terminal.Gui.Pos"/> to subtract (the subtrahend).</param>
+            <returns>The <see cref="T:Terminal.Gui.Pos"/> that is the <c>left</c> minus <c>right</c>.</returns>
+        </member>
+        <member name="M:Terminal.Gui.Pos.Left(Terminal.Gui.View)">
+            <summary>
+            Returns a Pos object tracks the Left (X) position of the specified view.
+            </summary>
+            <returns>The Position that depends on the other view.</returns>
+            <param name="view">The view that will be tracked.</param>
+        </member>
+        <member name="M:Terminal.Gui.Pos.X(Terminal.Gui.View)">
+            <summary>
+            Returns a Pos object tracks the Left (X) position of the specified view.
+            </summary>
+            <returns>The Position that depends on the other view.</returns>
+            <param name="view">The view that will be tracked.</param>
+        </member>
+        <member name="M:Terminal.Gui.Pos.Top(Terminal.Gui.View)">
+            <summary>
+            Returns a Pos object tracks the Top (Y) position of the specified view.
+            </summary>
+            <returns>The Position that depends on the other view.</returns>
+            <param name="view">The view that will be tracked.</param>
+        </member>
+        <member name="M:Terminal.Gui.Pos.Y(Terminal.Gui.View)">
+            <summary>
+            Returns a Pos object tracks the Top (Y) position of the specified view.
+            </summary>
+            <returns>The Position that depends on the other view.</returns>
+            <param name="view">The view that will be tracked.</param>
+        </member>
+        <member name="M:Terminal.Gui.Pos.Right(Terminal.Gui.View)">
+            <summary>
+            Returns a Pos object tracks the Right (X+Width) coordinate of the specified view.
+            </summary>
+            <returns>The Position that depends on the other view.</returns>
+            <param name="view">The view that will be tracked.</param>
+        </member>
+        <member name="M:Terminal.Gui.Pos.Bottom(Terminal.Gui.View)">
+            <summary>
+            Returns a Pos object tracks the Bottom (Y+Height) coordinate of the specified view.
+            </summary>
+            <returns>The Position that depends on the other view.</returns>
+            <param name="view">The view that will be tracked.</param>
+        </member>
+        <member name="T:Terminal.Gui.Dim">
+            <summary>
+            </summary>
+            <remarks>
+              <para>
+                Use the Dim objects on the Width or Height properties of a view to control the position.
+              </para>
+              <para>
+                These can be used to set the absolute position, when merely assigning an
+                integer value (via the implicit integer to Pos conversion), and they can be combined
+                to produce more useful layouts, like: Pos.Center - 3, which would shift the postion
+                of the view 3 characters to the left after centering for example.
+              </para>
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Dim.Percent(System.Single)">
+            <summary>
+            Creates a percentage Dim object
+            </summary>
+            <returns>The percent Dim object.</returns>
+            <param name="n">A value between 0 and 100 representing the percentage.</param>
+        </member>
+        <member name="M:Terminal.Gui.Dim.Fill(System.Int32)">
+            <summary>
+            Creates a Dim object that fills the dimension, but leaves the specified number of colums for a margin.
+            </summary>
+            <returns>The Fill dimension.</returns>
+            <param name="margin">Margin to use.</param>
+        </member>
+        <member name="M:Terminal.Gui.Dim.op_Implicit(System.Int32)~Terminal.Gui.Dim">
+            <summary>
+            Creates an Absolute Pos from the specified integer value.
+            </summary>
+            <returns>The Absolute Pos.</returns>
+            <param name="n">The value to convert to the pos.</param>
+        </member>
+        <member name="M:Terminal.Gui.Dim.Sized(System.Int32)">
+            <summary>
+            Creates an Absolute Pos from the specified integer value.
+            </summary>
+            <returns>The Absolute Pos.</returns>
+            <param name="n">The value to convert to the pos.</param>
+        </member>
+        <member name="M:Terminal.Gui.Dim.op_Addition(Terminal.Gui.Dim,Terminal.Gui.Dim)">
+            <summary>
+            Adds a <see cref="T:Terminal.Gui.Pos"/> to a <see cref="T:Terminal.Gui.Pos"/>, yielding a new <see cref="T:Terminal.Gui.Pos"/>.
+            </summary>
+            <param name="left">The first <see cref="T:Terminal.Gui.Pos"/> to add.</param>
+            <param name="right">The second <see cref="T:Terminal.Gui.Pos"/> to add.</param>
+            <returns>The <see cref="T:Terminal.Gui.Pos"/> that is the sum of the values of <c>left</c> and <c>right</c>.</returns>
+        </member>
+        <member name="M:Terminal.Gui.Dim.op_Subtraction(Terminal.Gui.Dim,Terminal.Gui.Dim)">
+            <summary>
+            Subtracts a <see cref="T:Terminal.Gui.Pos"/> from a <see cref="T:Terminal.Gui.Pos"/>, yielding a new <see cref="T:Terminal.Gui.Pos"/>.
+            </summary>
+            <param name="left">The <see cref="T:Terminal.Gui.Pos"/> to subtract from (the minuend).</param>
+            <param name="right">The <see cref="T:Terminal.Gui.Pos"/> to subtract (the subtrahend).</param>
+            <returns>The <see cref="T:Terminal.Gui.Pos"/> that is the <c>left</c> minus <c>right</c>.</returns>
+        </member>
+        <member name="M:Terminal.Gui.Dim.Width(Terminal.Gui.View)">
+            <summary>
+            Returns a Dim object tracks the Width of the specified view.
+            </summary>
+            <returns>The dimension of the other view.</returns>
+            <param name="view">The view that will be tracked.</param>
+        </member>
+        <member name="M:Terminal.Gui.Dim.Height(Terminal.Gui.View)">
+            <summary>
+            Returns a Dim object tracks the Height of the specified view.
+            </summary>
+            <returns>The dimension of the other view.</returns>
+            <param name="view">The view that will be tracked.</param>
+        </member>
+        <member name="T:Terminal.Gui.Rect">
+            <summary>
+            Stores a set of four integers that represent the location and size of a rectangle
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Rect.X">
+            <summary>
+            Gets or sets the x-coordinate of the upper-left corner of this Rectangle structure.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Rect.Y">
+            <summary>
+            Gets or sets the y-coordinate of the upper-left corner of this Rectangle structure.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Rect.Width">
+            <summary>
+            Gets or sets the width of this Rect structure.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Rect.Height">
+            <summary>
+            Gets or sets the height of this Rectangle structure.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Rect.Empty">
+             <summary>
+            	Empty Shared Field
+             </summary>
+            
+             <remarks>
+            	An uninitialized Rectangle Structure.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.FromLTRB(System.Int32,System.Int32,System.Int32,System.Int32)">
+             <summary>
+            	FromLTRB Shared Method
+             </summary>
+            
+             <remarks>
+            	Produces a Rectangle structure from left, top, right
+            	and bottom coordinates.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.Inflate(Terminal.Gui.Rect,System.Int32,System.Int32)">
+             <summary>
+            	Inflate Shared Method
+             </summary>
+            
+             <remarks>
+            	Produces a new Rectangle by inflating an existing 
+            	Rectangle by the specified coordinate values.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.Inflate(System.Int32,System.Int32)">
+             <summary>
+            	Inflate Method
+             </summary>
+            
+             <remarks>
+            	Inflates the Rectangle by a specified width and height.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.Inflate(Terminal.Gui.Size)">
+             <summary>
+            	Inflate Method
+             </summary>
+            
+             <remarks>
+            	Inflates the Rectangle by a specified Size.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.Intersect(Terminal.Gui.Rect,Terminal.Gui.Rect)">
+             <summary>
+            	Intersect Shared Method
+             </summary>
+            
+             <remarks>
+            	Produces a new Rectangle by intersecting 2 existing 
+            	Rectangles. Returns null if there is no	intersection.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.Intersect(Terminal.Gui.Rect)">
+             <summary>
+            	Intersect Method
+             </summary>
+            
+             <remarks>
+            	Replaces the Rectangle with the intersection of itself
+            	and another Rectangle.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.Union(Terminal.Gui.Rect,Terminal.Gui.Rect)">
+             <summary>
+            	Union Shared Method
+             </summary>
+            
+             <remarks>
+            	Produces a new Rectangle from the union of 2 existing 
+            	Rectangles.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.op_Equality(Terminal.Gui.Rect,Terminal.Gui.Rect)">
+             <summary>
+            	Equality Operator
+             </summary>
+            
+             <remarks>
+            	Compares two Rectangle objects. The return value is
+            	based on the equivalence of the Location and Size 
+            	properties of the two Rectangles.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.op_Inequality(Terminal.Gui.Rect,Terminal.Gui.Rect)">
+             <summary>
+            	Inequality Operator
+             </summary>
+            
+             <remarks>
+            	Compares two Rectangle objects. The return value is
+            	based on the equivalence of the Location and Size 
+            	properties of the two Rectangles.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.#ctor(Terminal.Gui.Point,Terminal.Gui.Size)">
+             <summary>
+            	Rectangle Constructor
+             </summary>
+            
+             <remarks>
+            	Creates a Rectangle from Point and Size values.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.#ctor(System.Int32,System.Int32,System.Int32,System.Int32)">
+             <summary>
+            	Rectangle Constructor
+             </summary>
+            
+             <remarks>
+            	Creates a Rectangle from a specified x,y location and
+            	width and height values.
+             </remarks>
+        </member>
+        <member name="P:Terminal.Gui.Rect.Bottom">
+             <summary>
+            	Bottom Property
+             </summary>
+            
+             <remarks>
+            	The Y coordinate of the bottom edge of the Rectangle.
+            	Read only.
+             </remarks>		
+        </member>
+        <member name="P:Terminal.Gui.Rect.IsEmpty">
+             <summary>
+            	IsEmpty Property
+             </summary>
+            
+             <remarks>
+            	Indicates if the width or height are zero. Read only.
+             </remarks>		
+        </member>
+        <member name="P:Terminal.Gui.Rect.Left">
+             <summary>
+            	Left Property
+             </summary>
+            
+             <remarks>
+            	The X coordinate of the left edge of the Rectangle.
+            	Read only.
+             </remarks>
+        </member>
+        <member name="P:Terminal.Gui.Rect.Location">
+             <summary>
+            	Location Property
+             </summary>
+            
+             <remarks>
+            	The Location of the top-left corner of the Rectangle.
+             </remarks>
+        </member>
+        <member name="P:Terminal.Gui.Rect.Right">
+             <summary>
+            	Right Property
+             </summary>
+            
+             <remarks>
+            	The X coordinate of the right edge of the Rectangle.
+            	Read only.
+             </remarks>
+        </member>
+        <member name="P:Terminal.Gui.Rect.Size">
+             <summary>
+            	Size Property
+             </summary>
+            
+             <remarks>
+            	The Size of the Rectangle.
+             </remarks>
+        </member>
+        <member name="P:Terminal.Gui.Rect.Top">
+             <summary>
+            	Top Property
+             </summary>
+            
+             <remarks>
+            	The Y coordinate of the top edge of the Rectangle.
+            	Read only.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.Contains(System.Int32,System.Int32)">
+             <summary>
+            	Contains Method
+             </summary>
+            
+             <remarks>
+            	Checks if an x,y coordinate lies within this Rectangle.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.Contains(Terminal.Gui.Point)">
+             <summary>
+            	Contains Method
+             </summary>
+            
+             <remarks>
+            	Checks if a Point lies within this Rectangle.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.Contains(Terminal.Gui.Rect)">
+             <summary>
+            	Contains Method
+             </summary>
+            
+             <remarks>
+            	Checks if a Rectangle lies entirely within this 
+            	Rectangle.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.Equals(System.Object)">
+             <summary>
+            	Equals Method
+             </summary>
+            
+             <remarks>
+            	Checks equivalence of this Rectangle and another object.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.GetHashCode">
+             <summary>
+            	GetHashCode Method
+             </summary>
+            
+             <remarks>
+            	Calculates a hashing value.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.IntersectsWith(Terminal.Gui.Rect)">
+             <summary>
+            	IntersectsWith Method
+             </summary>
+            
+             <remarks>
+            	Checks if a Rectangle intersects with this one.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.Offset(System.Int32,System.Int32)">
+             <summary>
+            	Offset Method
+             </summary>
+            
+             <remarks>
+            	Moves the Rectangle a specified distance.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.Offset(Terminal.Gui.Point)">
+             <summary>
+            	Offset Method
+             </summary>
+            
+             <remarks>
+            	Moves the Rectangle a specified distance.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Rect.ToString">
+             <summary>
+            	ToString Method
+             </summary>
+            
+             <remarks>
+            	Formats the Rectangle as a string in (x,y,w,h) notation.
+             </remarks>
+        </member>
+        <member name="T:Terminal.Gui.Size">
+            <summary>
+            Stores an ordered pair of integers, which specify a Height and Width.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.Size.Empty">
+            <summary>
+            Gets a Size structure that has a Height and Width value of 0.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.Size.op_Addition(Terminal.Gui.Size,Terminal.Gui.Size)">
+             <summary>
+            	Addition Operator
+             </summary>
+            
+             <remarks>
+            	Addition of two Size structures.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Size.op_Equality(Terminal.Gui.Size,Terminal.Gui.Size)">
+             <summary>
+            	Equality Operator
+             </summary>
+            
+             <remarks>
+            	Compares two Size objects. The return value is
+            	based on the equivalence of the Width and Height 
+            	properties of the two Sizes.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Size.op_Inequality(Terminal.Gui.Size,Terminal.Gui.Size)">
+             <summary>
+            	Inequality Operator
+             </summary>
+            
+             <remarks>
+            	Compares two Size objects. The return value is
+            	based on the equivalence of the Width and Height 
+            	properties of the two Sizes.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Size.op_Subtraction(Terminal.Gui.Size,Terminal.Gui.Size)">
+             <summary>
+            	Subtraction Operator
+             </summary>
+            
+             <remarks>
+            	Subtracts two Size structures.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Size.op_Explicit(Terminal.Gui.Size)~Terminal.Gui.Point">
+             <summary>
+            	Size to Point Conversion
+             </summary>
+            
+             <remarks>
+            	Returns a Point based on the dimensions of a given 
+            	Size. Requires explicit cast.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Size.#ctor(Terminal.Gui.Point)">
+             <summary>
+            	Size Constructor
+             </summary>
+            
+             <remarks>
+            	Creates a Size from a Point value.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Size.#ctor(System.Int32,System.Int32)">
+             <summary>
+            	Size Constructor
+             </summary>
+            
+             <remarks>
+            	Creates a Size from specified dimensions.
+             </remarks>
+        </member>
+        <member name="P:Terminal.Gui.Size.IsEmpty">
+             <summary>
+            	IsEmpty Property
+             </summary>
+            
+             <remarks>
+            	Indicates if both Width and Height are zero.
+             </remarks>
+        </member>
+        <member name="P:Terminal.Gui.Size.Width">
+             <summary>
+            	Width Property
+             </summary>
+            
+             <remarks>
+            	The Width coordinate of the Size.
+             </remarks>
+        </member>
+        <member name="P:Terminal.Gui.Size.Height">
+             <summary>
+            	Height Property
+             </summary>
+            
+             <remarks>
+            	The Height coordinate of the Size.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Size.Equals(System.Object)">
+             <summary>
+            	Equals Method
+             </summary>
+            
+             <remarks>
+            	Checks equivalence of this Size and another object.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Size.GetHashCode">
+             <summary>
+            	GetHashCode Method
+             </summary>
+            
+             <remarks>
+            	Calculates a hashing value.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Size.ToString">
+             <summary>
+            	ToString Method
+             </summary>
+            
+             <remarks>
+            	Formats the Size as a string in coordinate notation.
+             </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Size.Add(Terminal.Gui.Size,Terminal.Gui.Size)">
+            <summary>
+            Adds the width and height of one Size structure to the width and height of another Size structure.
+            </summary>
+            <returns>The add.</returns>
+            <param name="sz1">The first Size structure to add.</param>
+            <param name="sz2">The second Size structure to add.</param>
+        </member>
+        <member name="T:Terminal.Gui.Button">
+            <summary>
+              Button is a view that provides an item that invokes a callback when activated.
+            </summary>
+            <remarks>
+            <para>
+              Provides a button that can be clicked, or pressed with
+              the enter key and processes hotkeys (the first uppercase
+              letter in the button becomes the hotkey).
+            </para>
+            <para>
+              If the button is configured as the default (IsDefault) the button
+              will respond to the return key is no other view processes it, and
+              turns this into a clicked event.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:Terminal.Gui.Button.IsDefault">
+            <summary>
+            Gets or sets a value indicating whether this <see cref="T:Terminal.Gui.Button"/> is the default action to activate on return on a dialog.
+            </summary>
+            <value><c>true</c> if is default; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="F:Terminal.Gui.Button.Clicked">
+            <summary>
+              Clicked event, raised when the button is clicked.
+            </summary>
+            <remarks>
+              Client code can hook up to this event, it is
+              raised when the button is activated either with
+              the mouse or the keyboard.
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.Button.#ctor(NStack.ustring,System.Boolean)">
+            <summary>
+              Public constructor, creates a button based on
+              the given text at position 0,0
+            </summary>
+            <remarks>
+              The size of the button is computed based on the
+              text length.   This button is not a default button.
+            </remarks>
+            <param name="text">The button's text</param>
+            <param name="is_default">If set, this makes the button the default button in the current view, which means that if the user presses return on a view that does not handle return, it will be treated as if he had clicked on the button</param>
+        </member>
+        <member name="M:Terminal.Gui.Button.#ctor(System.Int32,System.Int32,NStack.ustring)">
+            <summary>
+              Public constructor, creates a button based on
+              the given text at the given position.
+            </summary>
+            <remarks>
+              The size of the button is computed based on the
+              text length.   This button is not a default button.
+            </remarks>
+            <param name="x">X position where the button will be shown.</param>
+            <param name="y">Y position where the button will be shown.</param>
+            <param name="text">The button's text</param>
+        </member>
+        <member name="P:Terminal.Gui.Button.Text">
+            <summary>
+              The text displayed by this widget.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.Button.#ctor(System.Int32,System.Int32,NStack.ustring,System.Boolean)">
+            <summary>
+              Public constructor, creates a button based on
+              the given text at the given position.
+            </summary>
+            <remarks>
+              If the value for is_default is true, a special
+              decoration is used, and the enter key on a
+              dialog would implicitly activate this button.
+            </remarks>
+            <param name="x">X position where the button will be shown.</param>
+            <param name="y">Y position where the button will be shown.</param>
+            <param name="text">The button's text</param>
+            <param name="is_default">If set, this makes the button the default button in the current view, which means that if the user presses return on a view that does not handle return, it will be treated as if he had clicked on the button</param>
+        </member>
+        <member name="T:Terminal.Gui.CheckBox">
+            <summary>
+            The Checkbox View shows an on/off toggle that the user can set
+            </summary>
+        </member>
+        <member name="E:Terminal.Gui.CheckBox.Toggled">
+            <summary>
+              Toggled event, raised when the CheckButton is toggled.
+            </summary>
+            <remarks>
+              Client code can hook up to this event, it is
+              raised when the checkbutton is activated either with
+              the mouse or the keyboard.
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.CheckBox.#ctor(NStack.ustring,System.Boolean)">
+            <summary>
+            Public constructor, creates a CheckButton based on the given text, uses Computed layout and sets the height and width.
+            </summary>
+            <param name="s">S.</param>
+            <param name="is_checked">If set to <c>true</c> is checked.</param>
+        </member>
+        <member name="M:Terminal.Gui.CheckBox.#ctor(System.Int32,System.Int32,NStack.ustring)">
+            <summary>
+              Public constructor, creates a CheckButton based on
+              the given text at an absolute position.
+            </summary>
+            <remarks>
+              The size of CheckButton is computed based on the
+              text length. This CheckButton is not toggled.
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.CheckBox.#ctor(System.Int32,System.Int32,NStack.ustring,System.Boolean)">
+            <summary>
+              Public constructor, creates a CheckButton based on
+              the given text at the given position and a state.
+            </summary>
+            <remarks>
+              The size of CheckButton is computed based on the
+              text length. 
+            </remarks>
+        </member>
+        <member name="P:Terminal.Gui.CheckBox.Checked">
+            <summary>
+               The state of the checkbox.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.CheckBox.Text">
+            <summary>
+              The text displayed by this widget.
+            </summary>
+        </member>
+        <member name="T:Terminal.Gui.FrameView">
+            <summary>
+            The FrameView is a container frame that draws a frame around the contents
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.FrameView.Title">
+            <summary>
+            The title to be displayed for this window.
+            </summary>
+            <value>The title.</value>
+        </member>
+        <member name="M:Terminal.Gui.FrameView.#ctor(Terminal.Gui.Rect,NStack.ustring)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.Gui.FrameView"/> class with
+            an absolute position and a title.
+            </summary>
+            <param name="frame">Frame.</param>
+            <param name="title">Title.</param>
+        </member>
+        <member name="M:Terminal.Gui.FrameView.#ctor(NStack.ustring)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.Gui.FrameView"/> class with
+            a title and the result is suitable to have its X, Y, Width and Height properties computed.
+            </summary>
+            <param name="title">Title.</param>
+        </member>
+        <member name="M:Terminal.Gui.FrameView.Add(Terminal.Gui.View)">
+            <summary>
+            Add the specified view to the ContentView.
+            </summary>
+            <param name="view">View to add to the window.</param>
+        </member>
+        <member name="M:Terminal.Gui.FrameView.Remove(Terminal.Gui.View)">
+            <summary>
+              Removes a widget from this container.
+            </summary>
+            <remarks>
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.FrameView.RemoveAll">
+            <summary>
+              Removes all widgets from this container.
+            </summary>
+            <remarks>
+            </remarks>
+        </member>
+        <member name="T:Terminal.Gui.HexView">
+            <summary>
+            An Hex viewer an editor view over a System.IO.Stream
+            </summary>
+            <remarks>
+            <para>
+            This provides a hex editor on top of a seekable stream with the left side showing an hex
+            dump of the values in the stream and the right side showing the contents (filterd to 
+            non-control sequence ascii characters).    
+            </para>
+            <para>
+            Users can switch from one side to the other by using the tab key.  
+            </para>
+            <para>
+            If you want to enable editing, set the AllowsEdits property, once that is done, the user
+            can make changes to the hexadecimal values of the stream.   Any changes done are tracked
+            in the Edits property which is a sorted dictionary indicating the position where the 
+            change was made and the new value.    A convenience ApplyEdits method can be used to c
+            apply the methods to the underlying stream.
+            </para>
+            <para>
+            It is possible to control the first byte shown by setting the DisplayStart property 
+            to the offset that you want to start viewing.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.HexView.#ctor(System.IO.Stream)">
+            <summary>
+            Creates and instance of the HexView that will render a seekable stream in hex on the allocated view region.
+            </summary>
+            <param name="source">Source stream, this stream should support seeking, or this will raise an exceotion.</param>
+        </member>
+        <member name="P:Terminal.Gui.HexView.Source">
+            <summary>
+            The source stream to display on the hex view, the stream should support seeking.
+            </summary>
+            <value>The source.</value>
+        </member>
+        <member name="P:Terminal.Gui.HexView.DisplayStart">
+            <summary>
+            Configures the initial offset to be displayed at the top
+            </summary>
+            <value>The display start.</value>
+        </member>
+        <member name="M:Terminal.Gui.HexView.PositionCursor">
+            <summary>
+            Positions the cursor based for the hex view
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.HexView.AllowEdits">
+            <summary>
+            Gets or sets a value indicating whether this <see cref="T:Terminal.Gui.HexView"/> allow editing of the contents of the underlying stream.
+            </summary>
+            <value><c>true</c> if allow edits; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Terminal.Gui.HexView.Edits">
+            <summary>
+            Gets a list of the edits done to the buffer which is a sorted dictionary with the positions where the edit took place and the value that was set.
+            </summary>
+            <value>The edits.</value>
+        </member>
+        <member name="M:Terminal.Gui.HexView.ApplyEdits">
+            <summary>
+            This method applies the edits to the stream and resets the contents of the Edits property
+            </summary>
+        </member>
+        <member name="T:Terminal.Gui.TextAlignment">
+            <summary>
+            Text alignment enumeration, controls how text is displayed.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.TextAlignment.Left">
+            <summary>
+            Aligns the text to the left of the frame.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.TextAlignment.Right">
+            <summary>
+            Aligns the text to the right side of the frame.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.TextAlignment.Centered">
+            <summary>
+            Centers the text in the frame.
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.TextAlignment.Justified">
+            <summary>
+            Shows the line as justified text in the line.
+            </summary>
+        </member>
+        <member name="T:Terminal.Gui.Label">
+            <summary>
+            Label view, displays a string at a given position, can include multiple lines.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.Label.#ctor(System.Int32,System.Int32,NStack.ustring)">
+            <summary>
+              Public constructor: creates a label at the given
+              coordinate with the given string, computes the bounding box
+              based on the size of the string, assumes that the string contains
+              newlines for multiple lines, no special breaking rules are used.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.Label.#ctor(Terminal.Gui.Rect,NStack.ustring)">
+            <summary>
+              Public constructor: creates a label at the given
+              coordinate with the given string and uses the specified
+              frame for the string.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.Label.#ctor(NStack.ustring)">
+            <summary>
+            Public constructor: creates a label and configures the default Width and Height based on the text, the result is suitable for Computed layout.
+            </summary>
+            <param name="text">Text.</param>
+        </member>
+        <member name="M:Terminal.Gui.Label.MeasureLines(NStack.ustring,System.Int32)">
+            <summary>
+            Computes the number of lines needed to render the specified text by the Label control
+            </summary>
+            <returns>Number of lines.</returns>
+            <param name="text">Text, may contain newlines.</param>
+            <param name="width">The width for the text.</param>
+        </member>
+        <member name="M:Terminal.Gui.Label.MaxWidth(NStack.ustring,System.Int32)">
+            <summary>
+            Computes the the max width of a line or multilines needed to render by the Label control
+            </summary>
+            <returns>Max width of lines.</returns>
+            <param name="text">Text, may contain newlines.</param>
+            <param name="width">The width for the text.</param>
+        </member>
+        <member name="P:Terminal.Gui.Label.Text">
+            <summary>
+              The text displayed by this widget.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.Label.TextAlignment">
+            <summary>
+            Controls the text-alignemtn property of the label, changing it will redisplay the label.
+            </summary>
+            <value>The text alignment.</value>
+        </member>
+        <member name="P:Terminal.Gui.Label.TextColor">
+            <summary>
+              The color used for the label
+            </summary>        
+        </member>
+        <member name="T:Terminal.Gui.IListDataSource">
+            <summary>
+            Implement this interface to provide your own custom rendering for a list.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.IListDataSource.Count">
+            <summary>
+            Returns the number of elements to display
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.IListDataSource.Render(Terminal.Gui.ListView,Terminal.Gui.ConsoleDriver,System.Boolean,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            This method is invoked to render a specified item, the method should cover the entire provided width.
+            </summary>
+            <returns>The render.</returns>
+            <param name="selected">Describes whether the item being rendered is currently selected by the user.</param>
+            <param name="item">The index of the item to render, zero for the first item and so on.</param>
+            <param name="col">The column where the rendering will start</param>
+            <param name="line">The line where the rendering will be done.</param>
+            <param name="width">The width that must be filled out.</param>
+            <remarks>
+              The default color will be set before this method is invoked, and will be based on whether the item is selected or not.
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.IListDataSource.IsMarked(System.Int32)">
+            <summary>
+            Should return whether the specified item is currently marked.
+            </summary>
+            <returns><c>true</c>, if marked, <c>false</c> otherwise.</returns>
+            <param name="item">Item index.</param>
+        </member>
+        <member name="M:Terminal.Gui.IListDataSource.SetMark(System.Int32,System.Boolean)">
+            <summary>
+            Flags the item as marked.
+            </summary>
+            <param name="item">Item index.</param>
+            <param name="value">If set to <c>true</c> value.</param>
+        </member>
+        <member name="T:Terminal.Gui.ListView">
+            <summary>
+            ListView widget renders a list of data.
+            </summary>
+            <remarks>
+            <para>
+              The ListView displays lists of data and allows the user to scroll through the data
+              and optionally mark elements of the list (controlled by the AllowsMark property).  
+            </para>
+            <para>
+              The ListView can either render an arbitrary IList object (for example, arrays, List&lt;T&gt;
+              and other collections) which are drawn by drawing the string/ustring contents or the 
+              result of calling ToString().   Alternatively, you can provide you own IListDataSource
+              object that gives you full control of what is rendered.
+            </para>
+            <para>
+              The ListView can display any object that implements the System.Collection.IList interface,
+              string values are converted into ustring values before rendering, and other values are
+              converted into ustrings by calling ToString() and then converting to ustring.
+            </para>
+            <para>
+              If you must change the contents of the ListView, set the Source property (when you are
+              providing your own rendering via the IListDataSource implementation) or call SetSource
+              when you are providing an IList.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:Terminal.Gui.ListView.Source">
+            <summary>
+            Gets or sets the IListDataSource backing this view, use SetSource() if you want to set a new IList source.
+            </summary>
+            <value>The source.</value>
+        </member>
+        <member name="M:Terminal.Gui.ListView.SetSource(System.Collections.IList)">
+            <summary>
+            Sets the source to an IList value, if you want to set a full IListDataSource, use the Source property.
+            </summary>
+            <value>An item implementing the IList interface.</value>
+        </member>
+        <member name="P:Terminal.Gui.ListView.AllowsMarking">
+            <summary>
+            Gets or sets a value indicating whether this <see cref="T:Terminal.Gui.ListView"/> allows items to be marked.
+            </summary>
+            <value><c>true</c> if allows marking elements of the list; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Terminal.Gui.ListView.TopItem">
+            <summary>
+            Gets or sets the item that is displayed at the top of the listview
+            </summary>
+            <value>The top item.</value>
+        </member>
+        <member name="P:Terminal.Gui.ListView.SelectedItem">
+            <summary>
+            Gets or sets the currently selecteded item.
+            </summary>
+            <value>The selected item.</value>
+        </member>
+        <member name="M:Terminal.Gui.ListView.#ctor(System.Collections.IList)">
+            <summary>
+            Initializes a new ListView that will display the contents of the object implementing the IList interface, with relative positioning
+            </summary>
+            <param name="source">An IList data source, if the elements of the IList are strings or ustrings, the string is rendered, otherwise the ToString() method is invoked on the result.</param>
+        </member>
+        <member name="M:Terminal.Gui.ListView.#ctor(Terminal.Gui.IListDataSource)">
+            <summary>
+            Initializes a new ListView that will display the provided data source, uses relative positioning.
+            </summary>
+            <param name="source">IListDataSource object that provides a mechanism to render the data. The number of elements on the collection should not change, if you must change, set the "Source" property to reset the internal settings of the ListView.</param>
+        </member>
+        <member name="M:Terminal.Gui.ListView.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.ListView"/> class.   You must set the Source property for this to show something.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.ListView.#ctor(Terminal.Gui.Rect,System.Collections.IList)">
+            <summary>
+            Initializes a new ListView that will display the contents of the object implementing the IList interface with an absolute position.
+            </summary>
+            <param name="rect">Frame for the listview.</param>
+            <param name="source">An IList data source, if the elements of the IList are strings or ustrings, the string is rendered, otherwise the ToString() method is invoked on the result.</param>
+        </member>
+        <member name="M:Terminal.Gui.ListView.#ctor(Terminal.Gui.Rect,Terminal.Gui.IListDataSource)">
+            <summary>
+            Initializes a new ListView that will display the provided data source  with an absolute position
+            </summary>
+            <param name="rect">Frame for the listview.</param>
+            <param name="source">IListDataSource object that provides a mechanism to render the data. The number of elements on the collection should not change, if you must change, set the "Source" property to reset the internal settings of the ListView.</param>
+        </member>
+        <member name="M:Terminal.Gui.ListView.Redraw(Terminal.Gui.Rect)">
+            <summary>
+            Redraws the ListView
+            </summary>
+            <param name="region">Region.</param>
+        </member>
+        <member name="E:Terminal.Gui.ListView.SelectedChanged">
+            <summary>
+            This event is raised when the cursor selection has changed.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.ListView.ProcessKey(Terminal.Gui.KeyEvent)">
+            <summary>
+            Handles cursor movement for this view, passes all other events.
+            </summary>
+            <returns><c>true</c>, if key was processed, <c>false</c> otherwise.</returns>
+            <param name="kb">Keyboard event.</param>
+        </member>
+        <member name="M:Terminal.Gui.ListView.PositionCursor">
+            <summary>
+            Positions the cursor in this view
+            </summary>
+        </member>
+        <member name="T:Terminal.Gui.MenuItem">
+            <summary>
+            A menu item has a title, an associated help text, and an action to execute on activation.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.MenuItem.#ctor(NStack.ustring,System.String,System.Action)">
+            <summary>
+            Initializes a new <see cref="T:Terminal.Gui.MenuItem"/>.
+            </summary>
+            <param name="title">Title for the menu item.</param>
+            <param name="help">Help text to display.</param>
+            <param name="action">Action to invoke when the menu item is activated.</param>
+        </member>
+        <member name="F:Terminal.Gui.MenuItem.HotKey">
+            <summary>
+            The hotkey is used when the menu is active, the shortcut can be triggered when the menu is not active.   
+            For example HotKey would be "N" when the File Menu is open (assuming there is a "_New" entry
+            if the ShortCut is set to "Control-N", this would be a global hotkey that would trigger as well
+            </summary>
+        </member>
+        <member name="F:Terminal.Gui.MenuItem.ShortCut">
+            <summary>
+            This is the global setting that can be used as a global shortcut to invoke the action on the menu.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.MenuItem.Title">
+            <summary>
+            Gets or sets the title.
+            </summary>
+            <value>The title.</value>
+        </member>
+        <member name="P:Terminal.Gui.MenuItem.Help">
+            <summary>
+            Gets or sets the help text for the menu item.
+            </summary>
+            <value>The help text.</value>
+        </member>
+        <member name="P:Terminal.Gui.MenuItem.Action">
+            <summary>
+            Gets or sets the action to be invoked when the menu is triggered
+            </summary>
+            <value>Method to invoke.</value>
+        </member>
+        <member name="T:Terminal.Gui.MenuBarItem">
+            <summary>
+            A menu bar item contains other menu items.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.MenuBarItem.Title">
+            <summary>
+            Gets or sets the title to display.
+            </summary>
+            <value>The title.</value>
+        </member>
+        <member name="P:Terminal.Gui.MenuBarItem.Children">
+            <summary>
+            Gets or sets the children for this MenuBarItem
+            </summary>
+            <value>The children.</value>
+        </member>
+        <member name="T:Terminal.Gui.MenuBar">
+            <summary>
+            A menu bar for your application.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.MenuBar.Menus">
+            <summary>
+            The menus that were defined when the menubar was created.   This can be updated if the menu is not currently visible.
+            </summary>
+            <value>The menu array.</value>
+        </member>
+        <member name="M:Terminal.Gui.MenuBar.#ctor(Terminal.Gui.MenuBarItem[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.MenuBar"/> class with the specified set of toplevel menu items.
+            </summary>
+            <param name="menus">Individual menu items, if one of those contains a null, then a separator is drawn.</param>
+        </member>
+        <member name="T:Terminal.Gui.ProgressBar">
+            <summary>
+            Progress bar can indicate progress of an activity visually.
+            </summary>
+            <remarks>
+              <para>
+                The progressbar can operate in two modes, percentage mode, or
+                activity mode.  The progress bar starts in percentage mode and
+                setting the Fraction property will reflect on the UI the progress 
+                made so far.   Activity mode is used when the application has no 
+                way of knowing how much time is left, and is started when you invoke
+                the Pulse() method.    You should call the Pulse method repeatedly as
+                your application makes progress.
+              </para>
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.ProgressBar.#ctor(Terminal.Gui.Rect)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.ProgressBar"/> class, starts in percentage mode with an absolute position and size.
+            </summary>
+            <param name="rect">Rect.</param>
+        </member>
+        <member name="M:Terminal.Gui.ProgressBar.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.ProgressBar"/> class, starts in percentage mode and uses relative layout.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.ProgressBar.Fraction">
+            <summary>
+            Gets or sets the progress indicator fraction to display, must be a value between 0 and 1.
+            </summary>
+            <value>The fraction representing the progress.</value>
+        </member>
+        <member name="M:Terminal.Gui.ProgressBar.Pulse">
+            <summary>
+            Notifies the progress bar that some progress has taken place.
+            </summary>
+            <remarks>
+            If the ProgressBar is is percentage mode, it switches to activity
+            mode.   If is in activity mode, the marker is moved.
+            </remarks>
+        </member>
+        <member name="T:Terminal.Gui.RadioGroup">
+            <summary>
+            Radio group shows a group of labels, only one of those can be selected at a given time
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.RadioGroup.#ctor(Terminal.Gui.Rect,System.String[],System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.RadioGroup"/> class
+            setting up the initial set of radio labels and the item that should be selected and uses
+            an absolute layout for the result.
+            </summary>
+            <param name="rect">Boundaries for the radio group.</param>
+            <param name="radioLabels">Radio labels, the strings can contain hotkeys using an undermine before the letter.</param>
+            <param name="selected">The item to be selected, the value is clamped to the number of items.</param>
+        </member>
+        <member name="P:Terminal.Gui.RadioGroup.Cursor">
+            <summary>
+            The location of the cursor in the radio group
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.RadioGroup.#ctor(System.String[],System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.RadioGroup"/> class
+            setting up the initial set of radio labels and the item that should be selected.
+            </summary>
+            <param name="radioLabels">Radio labels, the strings can contain hotkeys using an undermine before the letter.</param>
+            <param name="selected">The item to be selected, the value is clamped to the number of items.</param>
+        </member>
+        <member name="M:Terminal.Gui.RadioGroup.#ctor(System.Int32,System.Int32,System.String[],System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.RadioGroup"/> class
+            setting up the initial set of radio labels and the item that should be selected, 
+            the view frame is computed from the provided radioLabels.
+            </summary>
+            <param name="x">The x coordinate.</param>
+            <param name="y">The y coordinate.</param>
+            <param name="radioLabels">Radio labels, the strings can contain hotkeys using an undermine before the letter.</param>
+            <param name="selected">The item to be selected, the value is clamped to the number of items.</param>		
+        </member>
+        <member name="P:Terminal.Gui.RadioGroup.RadioLabels">
+            <summary>
+            The radio labels to display
+            </summary>
+            <value>The radio labels.</value>
+        </member>
+        <member name="P:Terminal.Gui.RadioGroup.Selected">
+            <summary>
+            The currently selected item from the list of radio labels
+            </summary>
+            <value>The selected.</value>
+        </member>
+        <member name="T:Terminal.Gui.ScrollBarView">
+            <summary>
+            ScrollBarViews are views that display a 1-character scrollbar, either horizontal or vertical
+            </summary>
+            <remarks>
+            <para>
+              The scrollbar is drawn to be a representation of the Size, assuming that the 
+              scroll position is set at Position.
+            </para>
+            <para>
+              If the region to display the scrollbar is larger than three characters, 
+              arrow indicators are drawn.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:Terminal.Gui.ScrollBarView.Size">
+            <summary>
+            The size that this scrollbar represents
+            </summary>
+            <value>The size.</value>
+        </member>
+        <member name="E:Terminal.Gui.ScrollBarView.ChangedPosition">
+            <summary>
+            This event is raised when the position on the scrollbar has changed.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.ScrollBarView.Position">
+            <summary>
+            The position to show the scrollbar at.
+            </summary>
+            <value>The position.</value>
+        </member>
+        <member name="M:Terminal.Gui.ScrollBarView.#ctor(Terminal.Gui.Rect,System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Terminal.Gui.Gui.ScrollBarView"/> class.
+            </summary>
+            <param name="rect">Frame for the scrollbar.</param>
+            <param name="size">The size that this scrollbar represents.</param>
+            <param name="position">The position within this scrollbar.</param>
+            <param name="isVertical">If set to <c>true</c> this is a vertical scrollbar, otherwize, the scrollbar is horizontal.</param>
+        </member>
+        <member name="M:Terminal.Gui.ScrollBarView.Redraw(Terminal.Gui.Rect)">
+            <summary>
+            Redraw the scrollbar
+            </summary>
+            <param name="region">Region to be redrawn.</param>
+        </member>
+        <member name="T:Terminal.Gui.ScrollView">
+            <summary>
+            Scrollviews are views that present a window into a virtual space where children views are added.  Similar to the iOS UIScrollView.
+            </summary>
+            <remarks>
+            <para>
+              The subviews that are added to this scrollview are offset by the
+              ContentOffset property.   The view itself is a window into the 
+              space represented by the ContentSize.
+            </para>
+            <para>
+              
+            </para>
+            </remarks>
+        </member>
+        <member name="P:Terminal.Gui.ScrollView.ContentSize">
+            <summary>
+            Represents the contents of the data shown inside the scrolview
+            </summary>
+            <value>The size of the content.</value>
+        </member>
+        <member name="P:Terminal.Gui.ScrollView.ContentOffset">
+            <summary>
+            Represents the top left corner coordinate that is displayed by the scrollview
+            </summary>
+            <value>The content offset.</value>
+        </member>
+        <member name="M:Terminal.Gui.ScrollView.Add(Terminal.Gui.View)">
+            <summary>
+            Adds the view to the scrollview.
+            </summary>
+            <param name="view">The view to add to the scrollview.</param>
+        </member>
+        <member name="P:Terminal.Gui.ScrollView.ShowHorizontalScrollIndicator">
+            <summary>
+            Gets or sets the visibility for the horizontal scroll indicator.
+            </summary>
+            <value><c>true</c> if show vertical scroll indicator; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="M:Terminal.Gui.ScrollView.RemoveAll">
+            <summary>
+              Removes all widgets from this container.
+            </summary>
+            <remarks>
+            </remarks>
+        </member>
+        <member name="P:Terminal.Gui.ScrollView.ShowVerticalScrollIndicator">
+            <summary>
+            /// Gets or sets the visibility for the vertical scroll indicator.
+            </summary>
+            <value><c>true</c> if show vertical scroll indicator; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="E:Terminal.Gui.ScrollView.Scrolled">
+            <summary>
+            This event is raised when the contents have scrolled
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.ScrollView.ScrollUp(System.Int32)">
+            <summary>
+            Scrolls the view up.
+            </summary>
+            <returns><c>true</c>, if left was scrolled, <c>false</c> otherwise.</returns>
+            <param name="lines">Number of lines to scroll.</param>
+        </member>
+        <member name="M:Terminal.Gui.ScrollView.ScrollLeft(System.Int32)">
+            <summary>
+            Scrolls the view to the left
+            </summary>
+            <returns><c>true</c>, if left was scrolled, <c>false</c> otherwise.</returns>
+            <param name="cols">Number of columns to scroll by.</param>
+        </member>
+        <member name="M:Terminal.Gui.ScrollView.ScrollDown(System.Int32)">
+            <summary>
+            Scrolls the view down.
+            </summary>
+            <returns><c>true</c>, if left was scrolled, <c>false</c> otherwise.</returns>
+            <param name="lines">Number of lines to scroll.</param>
+        </member>
+        <member name="M:Terminal.Gui.ScrollView.ScrollRight(System.Int32)">
+            <summary>
+            Scrolls the view to the right.
+            </summary>
+            <returns><c>true</c>, if right was scrolled, <c>false</c> otherwise.</returns>
+            <param name="cols">Number of columns to scroll by.</param>
+        </member>
+        <member name="T:Terminal.Gui.TextField">
+            <summary>
+              Text data entry widget
+            </summary>
+            <remarks>
+              The Entry widget provides Emacs-like editing
+              functionality,  and mouse support.
+            </remarks>
+        </member>
+        <member name="P:Terminal.Gui.TextField.Used">
+            <summary>
+            Tracks whether the text field should be considered "used", that is, that the user has moved in the entry, so new input should be appended at the cursor position, rather than clearing the entry
+            </summary>
+        </member>
+        <member name="E:Terminal.Gui.TextField.Changed">
+            <summary>
+              Changed event, raised when the text has clicked.
+            </summary>
+            <remarks>
+              Client code can hook up to this event, it is
+              raised when the text in the entry changes.
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.TextField.#ctor(System.String)">
+            <summary>
+               Public constructor that creates a text field, with layout controlled with X, Y, Width and Height.
+            </summary>
+            <param name="text">Initial text contents.</param>
+        </member>
+        <member name="M:Terminal.Gui.TextField.#ctor(NStack.ustring)">
+            <summary>
+               Public constructor that creates a text field, with layout controlled with X, Y, Width and Height.
+            </summary>
+            <param name="text">Initial text contents.</param>
+        </member>
+        <member name="M:Terminal.Gui.TextField.#ctor(System.Int32,System.Int32,System.Int32,NStack.ustring)">
+            <summary>
+               Public constructor that creates a text field at an absolute position and size.
+            </summary>
+            <param name="x">The x coordinate.</param>
+            <param name="y">The y coordinate.</param>
+            <param name="w">The width.</param>
+            <param name="text">Initial text contents.</param>
+        </member>
+        <member name="P:Terminal.Gui.TextField.Text">
+            <summary>
+              Sets or gets the text in the entry.
+            </summary>
+            <remarks>
+            </remarks>
+        </member>
+        <member name="P:Terminal.Gui.TextField.Secret">
+            <summary>
+              Sets the secret property.
+            </summary>
+            <remarks>
+              This makes the text entry suitable for entering passwords.
+            </remarks>
+        </member>
+        <member name="P:Terminal.Gui.TextField.CursorPosition">
+            <summary>
+               Sets or gets the current cursor position.
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.TextField.PositionCursor">
+            <summary>
+              Sets the cursor position.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.TextModel.Count">
+            <summary>
+            The number of text lines in the model
+            </summary>
+        </member>
+        <member name="M:Terminal.Gui.TextModel.GetLine(System.Int32)">
+            <summary>
+            Returns the specified line as a List of Rune
+            </summary>
+            <returns>The line.</returns>
+            <param name="line">Line number to retrieve.</param>
+        </member>
+        <member name="M:Terminal.Gui.TextModel.AddLine(System.Int32,System.Collections.Generic.List{System.Rune})">
+            <summary>
+            Adds a line to the model at the specified position.
+            </summary>
+            <param name="pos">Line number where the line will be inserted.</param>
+            <param name="runes">The line of text, as a List of Rune.</param>
+        </member>
+        <member name="M:Terminal.Gui.TextModel.RemoveLine(System.Int32)">
+            <summary>
+            Removes the line at the specified position
+            </summary>
+            <param name="pos">Position.</param>
+        </member>
+        <member name="T:Terminal.Gui.TextView">
+            <summary>
+              Multi-line text editing view
+            </summary>
+            <remarks>
+              <para>
+                The text view provides a multi-line text view.   Users interact
+                with it with the standard Emacs commands for movement or the arrow
+                keys. 
+              </para> 
+              <list type="table"> 
+                <listheader>
+                  <term>Shortcut</term>
+                  <description>Action performed</description>
+                </listheader>
+                <item>
+                   <term>Left cursor, Control-b</term>
+                   <description>
+                     Moves the editing point left.
+                   </description>
+                </item>
+                <item>
+                   <term>Right cursor, Control-f</term>
+                   <description>
+                     Moves the editing point right.
+                   </description>
+                </item>
+                <item>
+                   <term>Alt-b</term>
+                   <description>
+                     Moves one word back.
+                   </description>
+                </item>
+                <item>
+                   <term>Alt-f</term>
+                   <description>
+                     Moves one word forward.
+                   </description>
+                </item>
+                <item>
+                   <term>Up cursor, Control-p</term>
+                   <description>
+                     Moves the editing point one line up.
+                   </description>
+                </item>
+                <item>
+                   <term>Down cursor, Control-n</term>
+                   <description>
+                     Moves the editing point one line down
+                   </description>
+                </item>
+                <item>
+                   <term>Home key, Control-a</term>
+                   <description>
+                     Moves the cursor to the beginning of the line.
+                   </description>
+                </item>
+                <item>
+                   <term>End key, Control-e</term>
+                   <description>
+                     Moves the cursor to the end of the line.
+                   </description>
+                </item>
+                <item>
+                   <term>Delete, Control-d</term>
+                   <description>
+                     Deletes the character in front of the cursor.
+                   </description>
+                </item>
+                <item>
+                   <term>Backspace</term>
+                   <description>
+                     Deletes the character behind the cursor.
+                   </description>
+                </item>
+                <item>
+                   <term>Control-k</term>
+                   <description>
+                     Deletes the text until the end of the line and replaces the kill buffer
+                     with the deleted text.   You can paste this text in a different place by
+                     using Control-y.
+                   </description>
+                </item>
+                <item>
+                   <term>Control-y</term>
+                   <description>
+                      Pastes the content of the kill ring into the current position.
+                   </description>
+                </item>
+                <item>
+                   <term>Alt-d</term>
+                   <description>
+                      Deletes the word above the cursor and adds it to the kill ring.  You 
+                      can paste the contents of the kill ring with Control-y.
+                   </description>
+                </item>
+                <item>
+                   <term>Control-q</term>
+                   <description>
+                     Quotes the next input character, to prevent the normal processing of
+                     key handling to take place.
+                   </description>
+                </item>
+              </list>
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.TextView.#ctor(Terminal.Gui.Rect)">
+            <summary>
+              Public constructor, creates a view on the specified area, with absolute position and size.
+            </summary>
+            <remarks>
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.TextView.#ctor">
+            <summary>
+            Public constructor, creates a view on the specified area, with dimensions controlled with the X, Y, Width and Height properties.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.TextView.Text">
+            <summary>
+              Sets or gets the text in the entry.
+            </summary>
+            <remarks>
+            </remarks>
+        </member>
+        <member name="M:Terminal.Gui.TextView.LoadFile(System.String)">
+            <summary>
+            Loads the contents of the file into the TextView.
+            </summary>
+            <returns><c>true</c>, if file was loaded, <c>false</c> otherwise.</returns>
+            <param name="path">Path to the file to load.</param>
+        </member>
+        <member name="M:Terminal.Gui.TextView.LoadStream(System.IO.Stream)">
+            <summary>
+            Loads the contents of the stream into the TextView.
+            </summary>
+            <returns><c>true</c>, if stream was loaded, <c>false</c> otherwise.</returns>
+            <param name="stream">Stream to load the contents from.</param>
+        </member>
+        <member name="P:Terminal.Gui.TextView.CurrentRow">
+            <summary>
+               The current cursor row.
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.TextView.CurrentColumn">
+            <summary>
+            Gets the cursor column.
+            </summary>
+            <value>The cursor column.</value>
+        </member>
+        <member name="M:Terminal.Gui.TextView.PositionCursor">
+            <summary>
+              Positions the cursor on the current row and column
+            </summary>
+        </member>
+        <member name="P:Terminal.Gui.TextView.ReadOnly">
+            <summary>
+            Indicates readonly attribute of TextView
+            </summary>
+            <value>Boolean value(Default false)</value>
+        </member>
+        <member name="M:Terminal.Gui.TextView.Redraw(Terminal.Gui.Rect)">
+            <summary>
+            Redraw the text editor region 
+            </summary>
+            <param name="region">The region to redraw.</param>
+        </member>
+        <member name="M:Terminal.Gui.TextView.ScrollTo(System.Int32)">
+            <summary>
+            Will scroll the view to display the specified row at the top
+            </summary>
+            <param name="row">Row that should be displayed at the top, if the value is negative it will be reset to zero</param>
+        </member>
+        <member name="T:Mono.Terminal.IMainLoopDriver">
+            <summary>
+            Public interface to create your own platform specific main loop driver.
+            </summary>
+        </member>
+        <member name="M:Mono.Terminal.IMainLoopDriver.Setup(Mono.Terminal.MainLoop)">
+            <summary>
+            Initializes the main loop driver, gets the calling main loop for the initialization.
+            </summary>
+            <param name="mainLoop">Main loop.</param>
+        </member>
+        <member name="M:Mono.Terminal.IMainLoopDriver.Wakeup">
+            <summary>
+            Wakes up the mainloop that might be waiting on input, must be thread safe.
+            </summary>
+        </member>
+        <member name="M:Mono.Terminal.IMainLoopDriver.EventsPending(System.Boolean)">
+            <summary>
+            Must report whether there are any events pending, or even block waiting for events.
+            </summary>
+            <returns><c>true</c>, if there were pending events, <c>false</c> otherwise.</returns>
+            <param name="wait">If set to <c>true</c> wait until an event is available, otherwise return immediately.</param>
+        </member>
+        <member name="T:Mono.Terminal.UnixMainLoop">
+            <summary>
+            Unix main loop, suitable for using on Posix systems
+            </summary>
+            <remarks>
+            In addition to the general functions of the mainloop, the Unix version
+            can watch file descriptors using the AddWatch methods.
+            </remarks>
+        </member>
+        <member name="T:Mono.Terminal.UnixMainLoop.Condition">
+            <summary>
+              Condition on which to wake up from file descriptor activity.  These match the Linux/BSD poll definitions.
+            </summary>
+        </member>
+        <member name="F:Mono.Terminal.UnixMainLoop.Condition.PollIn">
+            <summary>
+            There is data to read
+            </summary>
+        </member>
+        <member name="F:Mono.Terminal.UnixMainLoop.Condition.PollOut">
+            <summary>
+            Writing to the specified descriptor will not block
+            </summary>
+        </member>
+        <member name="F:Mono.Terminal.UnixMainLoop.Condition.PollPri">
+            <summary>
+            There is urgent data to read
+            </summary>
+        </member>
+        <member name="F:Mono.Terminal.UnixMainLoop.Condition.PollErr">
+            <summary>
+             Error condition on output
+            </summary>
+        </member>
+        <member name="F:Mono.Terminal.UnixMainLoop.Condition.PollHup">
+            <summary>
+            Hang-up on output
+            </summary>
+        </member>
+        <member name="F:Mono.Terminal.UnixMainLoop.Condition.PollNval">
+            <summary>
+            File descriptor is not open.
+            </summary>
+        </member>
+        <member name="M:Mono.Terminal.UnixMainLoop.RemoveWatch(System.Object)">
+            <summary>
+              Removes an active watch from the mainloop.
+            </summary>
+            <remarks>
+              The token parameter is the value returned from AddWatch
+            </remarks>
+        </member>
+        <member name="M:Mono.Terminal.UnixMainLoop.AddWatch(System.Int32,Mono.Terminal.UnixMainLoop.Condition,System.Func{Mono.Terminal.MainLoop,System.Boolean})">
+             <summary>
+              Watches a file descriptor for activity.
+             </summary>
+             <remarks>
+              When the condition is met, the provided callback
+              is invoked.  If the callback returns false, the
+              watch is automatically removed.
+            
+              The return value is a token that represents this watch, you can
+              use this token to remove the watch by calling RemoveWatch.
+             </remarks>
+        </member>
+        <member name="T:Mono.Terminal.NetMainLoop">
+            <summary>
+            Mainloop intended to be used with the .NET System.Console API, and can
+            be used on Windows and Unix, it is cross platform but lacks things like
+            file descriptor monitoring.
+            </summary>
+        </member>
+        <member name="T:Mono.Terminal.MainLoop">
+            <summary>
+              Simple main loop implementation that can be used to monitor
+              file descriptor, run timers and idle handlers.
+            </summary>
+            <remarks>
+              Monitoring of file descriptors is only available on Unix, there
+              does not seem to be a way of supporting this on Windows.
+            </remarks>
+        </member>
+        <member name="P:Mono.Terminal.MainLoop.Driver">
+            <summary>
+            The current IMainLoopDriver in use.
+            </summary>
+            <value>The driver.</value>
+        </member>
+        <member name="M:Mono.Terminal.MainLoop.#ctor(Mono.Terminal.IMainLoopDriver)">
+            <summary>
+             Creates a new Mainloop, to run it you must provide a driver, and choose
+             one of the implementations UnixMainLoop, NetMainLoop or WindowsMainLoop.
+            </summary>
+        </member>
+        <member name="M:Mono.Terminal.MainLoop.Invoke(System.Action)">
+            <summary>
+              Runs @action on the thread that is processing events
+            </summary>
+        </member>
+        <member name="M:Mono.Terminal.MainLoop.AddIdle(System.Func{System.Boolean})">
+            <summary>
+              Executes the specified @idleHandler on the idle loop.  The return value is a token to remove it.
+            </summary>
+        </member>
+        <member name="M:Mono.Terminal.MainLoop.RemoveIdle(System.Func{System.Boolean})">
+            <summary>
+              Removes the specified idleHandler from processing.
+            </summary>
+        </member>
+        <member name="M:Mono.Terminal.MainLoop.AddTimeout(System.TimeSpan,System.Func{Mono.Terminal.MainLoop,System.Boolean})">
+             <summary>
+               Adds a timeout to the mainloop.
+             </summary>
+             <remarks>
+               When time time specified passes, the callback will be invoked.
+               If the callback returns true, the timeout will be reset, repeating
+               the invocation. If it returns false, the timeout will stop.
+            
+               The returned value is a token that can be used to stop the timeout
+               by calling RemoveTimeout.
+             </remarks>
+        </member>
+        <member name="M:Mono.Terminal.MainLoop.RemoveTimeout(System.Object)">
+            <summary>
+              Removes a previously scheduled timeout
+            </summary>
+            <remarks>
+              The token parameter is the value returned by AddTimeout.
+            </remarks>
+        </member>
+        <member name="M:Mono.Terminal.MainLoop.Stop">
+            <summary>
+              Stops the mainloop.
+            </summary>
+        </member>
+        <member name="M:Mono.Terminal.MainLoop.EventsPending(System.Boolean)">
+            <summary>
+              Determines whether there are pending events to be processed.
+            </summary>
+            <remarks>
+              You can use this method if you want to probe if events are pending.
+              Typically used if you need to flush the input queue while still
+              running some of your own code in your main thread. 
+            </remarks>
+        </member>
+        <member name="M:Mono.Terminal.MainLoop.MainIteration">
+             <summary>
+               Runs one iteration of timers and file watches
+             </summary>
+             <remarks>
+               You use this to process all pending events (timers, idle handlers and file watches).
+            
+               You can use it like this:
+                 while (main.EvensPending ()) MainIteration ();
+             </remarks>
+        </member>
+        <member name="M:Mono.Terminal.MainLoop.Run">
+            <summary>
+              Runs the mainloop.
+            </summary>
+        </member>
+        <member name="T:Mono.Terminal.Internal.UnmanagedLibrary">
+            <summary>
+            Represents a dynamically loaded unmanaged library in a (partially) platform independent manner.
+            First, the native library is loaded using dlopen (on Unix systems) or using LoadLibrary (on Windows).
+            dlsym or GetProcAddress are then used to obtain symbol addresses. <c>Marshal.GetDelegateForFunctionPointer</c>
+            transforms the addresses into delegates to native methods.
+            See http://stackoverflow.com/questions/13461989/p-invoke-to-dynamically-loaded-library-on-mono.
+            </summary>
+        </member>
+        <member name="M:Mono.Terminal.Internal.UnmanagedLibrary.LoadSymbol(System.String)">
+            <summary>
+            Loads symbol in a platform specific way.
+            </summary>
+            <param name="symbolName"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Mono.Terminal.Internal.UnmanagedLibrary.PlatformSpecificLoadLibrary(System.String)">
+            <summary>
+            Loads library in a platform specific way.
+            </summary>
+        </member>
+        <member name="T:Mono.Terminal.Internal.UnmanagedLibrary.Mono">
+            <summary>
+            On Linux systems, using using dlopen and dlsym results in
+            DllNotFoundException("libdl.so not found") if libc6-dev
+            is not installed. As a workaround, we load symbols for
+            dlopen and dlsym from the current process as on Linux
+            Mono sure is linked against these symbols.
+            </summary>
+        </member>
+        <member name="T:Mono.Terminal.Internal.UnmanagedLibrary.CoreCLR">
+            <summary>
+            Similarly as for Mono on Linux, we load symbols for
+            dlopen and dlsym from the "libcoreclr.so",
+            to avoid the dependency on libc-dev Linux.
+            </summary>
+        </member>
+    </members>
+</doc>
