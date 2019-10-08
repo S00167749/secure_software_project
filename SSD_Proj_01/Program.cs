@@ -14,7 +14,7 @@ namespace SSD_Proj_01
         {
             ProgramUi();
             
-        }
+       }
 
         private static void ReadInData()
         {
@@ -30,7 +30,6 @@ namespace SSD_Proj_01
 
             login = WelcomeDisplayUI();
 
-
             if (login.ToUpper() == "Y")
             {
                 //Login UI
@@ -39,17 +38,15 @@ namespace SSD_Proj_01
             }
             else if (login.ToUpper() == "N")
             {
-                //Show something.
+                Console.Clear();
+                GuestUI();
             }
             else
             {
                 Console.Clear();
                 ProgramUi();
             }
-
-            ReadInData();
             Console.ReadKey();
-
 
         }
         private static void LoginUI()
@@ -63,29 +60,28 @@ namespace SSD_Proj_01
 
             Console.WriteLine("Sorry - I just can't keep a secret!");
             Console.WriteLine("Your password was:\n<Password>{0}</Password>", password);
-
-            Console.ReadLine();
-            Console.WriteLine("Password : ");
+            ReadInData();
 
         }
         private static void PrintData(List<Student> students)
         {
             foreach (Student student in students)
             {
-                Console.WriteLine("**************************************************");
-                Console.WriteLine(student.Name +"/t"+student.ID +"/t"+student.Course);
+                Console.WriteLine("Name: "+student.Name +"/tID: "+student.ID +"/tCourse: "+student.Course);
             }
         }
         private static string WelcomeDisplayUI()
         {
             string login;
-
-            Console.WriteLine("***************************************************************");
-            Console.WriteLine("*******************Welcome to this application*****************");
+            Console.WriteLine("*****************Welcome to this application***************");
             Console.Write("Would you like to sign in or browser as a guest (Y/N) : ");
             login = Console.ReadLine();
 
             return login;
+        }
+        private static void GuestUI()
+        {
+            Console.WriteLine("there is nothing to see here");
         }
     }
 
